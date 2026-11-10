@@ -48,7 +48,6 @@ const save = () => { try { localStorage.setItem('move-clip-studio', JSON.stringi
 let tl = null, curScene = 0, audioBuf = null, audioDirty = true;
 
 await E.loadAssets();
-if (!E.fontsOK()) { const m = document.createElement('div'); m.className = 'msg err'; m.style.cssText = 'padding:8px 24px;background:#FBE5E5'; m.textContent = 'Không tải được font Mona Sans / Josefin Sans — clip sẽ dùng font dự phòng. Kiểm tra kết nối rồi tải lại trang.'; document.body.insertBefore(m, document.querySelector('main')); }
 // ---------------- backend (Google Apps Script → Drive cố định + Claude API)
 const CFG = window.CLIP_CONFIG || {}, API = (CFG.APPS_SCRIPT_URL || '').trim();
 let pass = ''; try { pass = localStorage.getItem('move-clip-pass') || ''; } catch (e) {}
