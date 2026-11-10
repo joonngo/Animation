@@ -23,8 +23,9 @@ const A = {};
 function loadImg(src) { return new Promise((r, j) => { const i = new Image(); i.onload = () => r(i); i.onerror = j; i.src = src; }); }
 async function loadAssets() {
   const want = ['500', '600', '700', '900'].map(w => `${w} 40px "Mona Sans"`).concat(['400 40px "Josefin Sans"', '600 40px "Josefin Sans"']);
-  try { await Promise.race([Promise.all(want.map(f => document.fonts.load(f, 'Đường ặ'))), new Promise(r => setTimeout(r, 6000))]); } catch (e) {}
-  A.fontsOK = document.fonts.check('900 40px "Mona Sans"') && document.fonts.check('400 40px "Josefin Sans"');
+  let res = null;
+  try { res = await Promise.race([Promise.all(want.map(f => document.fonts.load(f, 'Đường ặ'))), new Promise(r => setTimeout(() => r(null), 8000))]); } catch (e) {}
+  A.fontsOK = !!res && res.every(x => x && x.length);
   [A.logo, A.motif, A.pattern] = await Promise.all(['assets/logo_white.png', 'assets/motif.png', 'assets/pattern_tile.png'].map(loadImg));
 }
 const tintCache = new Map();
@@ -358,5 +359,5 @@ async function renderAudio(tl, { music = true, sfx = true, sr = 48000 } = {}) {
   return ac.startRendering();
 }
 
-window.MoveEngine = { W, H, SAFE, C, TH, BG_NAMES, ART_NAMES, loadAssets, buildTimeline, renderAt, renderAudio, layoutScene, sceneWords };
+window.MoveEngine = { fontsOK: () => !!A.fontsOK, W, H, SAFE, C, TH, BG_NAMES, ART_NAMES, loadAssets, buildTimeline, renderAt, renderAudio, layoutScene, sceneWords };
 })();
