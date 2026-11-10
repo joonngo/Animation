@@ -89,12 +89,14 @@ const projName = () => (state.name || (state.scenes[0] && state.scenes[0].title)
 const projData = () => ({ name: state.name || '', raw: state.raw, target: state.target, aud: state.aud, scenes: state.scenes, savedAt: new Date().toISOString() });
 
 // ---------------- navigation
-function go(n) {
+function go(n, fromHash) {
+  if (!fromHash && location.hash !== '#step-' + n) { try { history.pushState(null, '', '#step-' + n); } catch (e) {} }
   $$('#steps button').forEach(b => b.classList.toggle('on', b.dataset.s == n));
   $$('.pane').forEach(p => p.classList.toggle('on', p.id === 'p' + n));
   if (n == 2) renderEditor(); if (n == 3) renderSum3(); if (n == 4) detectFormats();
 }
 $$('#steps button').forEach(b => b.onclick = () => go(b.dataset.s));
+window.addEventListener('popstate', () => { const m = location.hash.match(/step-(\d)/); go(m ? m[1] : 1, true); });
 document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) go(g.dataset.go); });
 
 // ---------------- step 1

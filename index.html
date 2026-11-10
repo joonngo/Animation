@@ -96,6 +96,7 @@ video.out { width: 220px; border-radius: 10px; background: #000; display: none; 
         <button class="btn red" id="aiParse">Kiểm tra &amp; chia cảnh với Claude</button>
         <button class="btn ghost" id="quickParse">Chia cảnh nhanh (không AI)</button>
         <button class="btn ghost" id="loadSample">Dùng mẫu: Đăng ký biển số</button>
+        <span style="flex:1"></span><button class="btn ghost" data-go="2">Tiếp tục chỉnh cảnh hiện tại →</button>
       </div>
       <div class="msg" id="m1"></div>
       <div id="driveBox" style="display:none;margin-top:28px;padding-top:18px;border-top:1px solid var(--line)">
@@ -111,7 +112,7 @@ video.out { width: 220px; border-radius: 10px; background: #000; display: none; 
       <label class="f">Tên dự án</label><input type="text" id="projName" placeholder="VD: Dang-ky-bien-so-xe-dien" style="margin-bottom:16px">
       <div class="checks" id="checks"></div>
       <div id="scenes"></div>
-      <div class="row"><button class="btn ghost sm" id="addScene">+ Thêm cảnh</button><span style="flex:1"></span><button class="btn ghost drive-only" id="saveProj" style="display:none">Lưu dự án lên Drive</button><button class="btn red" data-go="3">Tạo clip →</button></div>
+      <div class="row"><button class="btn ghost" data-go="1">← Nhập content</button><button class="btn ghost sm" id="addScene">+ Thêm cảnh</button><span style="flex:1"></span><button class="btn ghost drive-only" id="saveProj" style="display:none">Lưu dự án lên Drive</button><button class="btn red" data-go="3">Tạo clip →</button></div>
       <div class="msg" id="m2"></div>
     </div>
     <!-- 3 CREATE -->
@@ -125,7 +126,7 @@ video.out { width: 220px; border-radius: 10px; background: #000; display: none; 
         <label><input type="radio" name="aud" value="sfx"><b>Chỉ SFX</b><span>Whoosh, tick, ding…</span></label>
         <label><input type="radio" name="aud" value="none"><b>Không âm thanh</b><span>Để tự lồng tiếng sau</span></label>
       </div>
-      <div class="row" style="margin-top:16px"><button class="btn ghost" data-go="2">← Sửa cảnh</button><span style="flex:1"></span><button class="btn red" data-go="4">Chọn định dạng export →</button></div>
+      <div class="row" style="margin-top:16px"><button class="btn ghost" data-go="2">← Kiểm tra / sửa cảnh</button><span style="flex:1"></span><button class="btn red" data-go="4">Chọn định dạng export →</button></div>
     </div>
     <!-- 4 EXPORT -->
     <div class="pane" id="p4">
@@ -146,7 +147,7 @@ video.out { width: 220px; border-radius: 10px; background: #000; display: none; 
         <label><input type="radio" name="q" value="6"><b>Tiêu chuẩn</b><span>~6 Mbps</span></label>
       </div>
       <label class="drive-only" style="display:none;margin-top:12px;font-size:13px"><input type="checkbox" id="autoDrive" checked> Tự lưu video + dự án vào Google Drive của team sau khi export</label>
-      <div class="row" style="margin-top:16px"><button class="btn red" id="exportBtn">Export clip</button><button class="btn ghost" id="saveBtn" style="display:none">Tải về máy</button><button class="btn ghost drive-only" id="driveBtn" style="display:none">Lưu lên Drive</button></div>
+      <div class="row" style="margin-top:16px"><button class="btn ghost" data-go="3">← Tạo clip</button><button class="btn ghost" data-go="2">← Sửa cảnh</button><span style="flex:1"></span><button class="btn red" id="exportBtn">Export clip</button><button class="btn ghost" id="saveBtn" style="display:none">Tải về máy</button><button class="btn ghost drive-only" id="driveBtn" style="display:none">Lưu lên Drive</button></div>
       <div class="bar"><i id="prog"></i></div>
       <div class="note" id="m4"></div>
       <div class="note" id="m4d"></div>
