@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOVE Clip Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mona+Sans:wght@500;600;700;800;900&family=Josefin+Sans:wght@400;600&display=swap&subset=vietnamese" rel="stylesheet">
+<style>
+:root { --red:#BE0000; --black:#0B1718; --purple:#A331F4; --neutral:#6D6D6D; --nl:#F2F2F2; --line:#E2E2E2; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font-family: "Mona Sans", system-ui, sans-serif; font-weight: 500; color: var(--black); background: var(--nl); font-size: 14px; }
+header { display: flex; align-items: center; gap: 16px; padding: 14px 24px; background: var(--black); color: #fff; }
+header img { height: 22px; }
+header .ttl { font-weight: 700; letter-spacing: .02em; opacity: .9; }
+.steps { display: flex; gap: 4px; margin-left: auto; }
+.steps button { background: transparent; color: #fff; border: 0; padding: 8px 14px; border-radius: 6px; font: 600 13px "Mona Sans"; opacity: .55; cursor: pointer; }
+.steps button.on { opacity: 1; background: rgba(255,255,255,.1); }
+.steps button b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,.18); margin-right: 6px; font-size: 11px; }
+.steps button.on b { background: var(--red); }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 24px; padding: 24px; height: calc(100% - 50px); }
+.panel { background: #fff; border-radius: 12px; padding: 24px; overflow: auto; }
+.pane { display: none; } .pane.on { display: block; }
+h2 { font: 800 22px "Mona Sans"; font-weight: 900; margin: 0 0 4px; }
+.hint { color: var(--neutral); margin: 0 0 18px; line-height: 1.5; }
+textarea, input[type=text], input[type=number], select { width: 100%; font: 500 14px "Mona Sans"; color: var(--black); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: #fff; }
+textarea:focus, input:focus, select:focus { outline: 2px solid var(--black); outline-offset: -1px; }
+#raw { min-height: 340px; line-height: 1.6; resize: vertical; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.btn { border: 0; border-radius: 8px; padding: 11px 18px; font: 700 14px "Mona Sans"; cursor: pointer; background: var(--black); color: #fff; }
+.btn.red { background: var(--red); } .btn.ghost { background: #fff; color: var(--black); border: 1px solid var(--line); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.sm { padding: 6px 10px; font-size: 12px; }
+label.f { display: block; font: 700 11px "Mona Sans"; text-transform: uppercase; letter-spacing: .06em; color: var(--neutral); margin: 10px 0 4px; }
+.checks { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 18px; }
+.checks .sum { display: flex; gap: 14px; font-weight: 700; margin-bottom: 8px; flex-wrap: wrap; }
+.pill { padding: 3px 10px; border-radius: 99px; font-size: 12px; }
+.pill.err { background: #FBE5E5; color: var(--red); } .pill.warn { background: #F4EAFE; color: #7A1FC0; } .pill.ok { background: #E9F5EC; color: #1C7A3A; } .pill.info { background: var(--nl); color: var(--neutral); }
+.checks ul { margin: 0; padding-left: 18px; line-height: 1.6; }
+.checks li.err { color: var(--red); } .checks li.warn { color: #7A1FC0; } .checks li.info { color: var(--neutral); }
+.ratio { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin: 10px 0 4px; }
+.scene { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; }
+.scene.cur { border-color: var(--black); }
+.scene .hd { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; }
+.scene .sw { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--line); flex: none; }
+.scene .hd .t { font-weight: 700; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.scene .hd .d { color: var(--neutral); font-size: 12px; }
+.scene .hd .w { color: var(--red); font-size: 12px; font-weight: 700; }
+.scene .bd { display: none; padding: 0 14px 14px; border-top: 1px solid var(--line); }
+.scene.open .bd { display: block; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; } .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0 10px; }
+.side { display: flex; flex-direction: column; align-items: center; gap: 12px; background: #fff; border-radius: 12px; padding: 18px; overflow: hidden; }
+.stage { position: relative; height: calc(100% - 110px); aspect-ratio: 9/16; border-radius: 14px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px var(--line); }
+.stage canvas { width: 100%; height: 100%; display: block; }
+.ctrl { width: 100%; display: flex; align-items: center; gap: 10px; }
+.ctrl input[type=range] { flex: 1; accent-color: var(--red); }
+.ctrl .tm { font: 600 12px "Mona Sans"; color: var(--neutral); min-width: 84px; text-align: right; font-variant-numeric: tabular-nums; }
+.toggles { display: flex; gap: 14px; font-size: 12px; color: var(--neutral); }
+.opt { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 8px; }
+.opt label { border: 1px solid var(--line); border-radius: 10px; padding: 12px; cursor: pointer; display: block; }
+.opt input { display: none; } .opt label:has(input:checked) { border-color: var(--black); box-shadow: inset 0 0 0 1px var(--black); }
+.opt label.dis { opacity: .4; cursor: not-allowed; }
+.opt b { display: block; font-size: 14px; } .opt span { color: var(--neutral); font-size: 12px; }
+.bar { height: 8px; background: var(--nl); border-radius: 4px; overflow: hidden; margin: 14px 0 6px; } .bar i { display: block; height: 100%; width: 0; background: var(--red); transition: width .1s; }
+video.out { width: 220px; border-radius: 10px; background: #000; display: none; }
+.note { font-size: 12px; color: var(--neutral); line-height: 1.5; }
+.spin { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: s 1s linear infinite; vertical-align: -2px; margin-right: 6px; } @keyframes s { to { transform: rotate(360deg) } }
+.msg { margin-top: 10px; font-size: 13px; } .msg.err { color: var(--red); }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; height: auto; } .stage { height: 70vh; } }
+</style>
+</head>
+<body>
+<header>
+  <img src="assets/logo_white.png" alt="MOVE">
+  <span class="ttl">Clip Studio</span>
+  <nav class="steps" id="steps">
+    <button data-s="1" class="on"><b>1</b>Nhập content</button>
+    <button data-s="2"><b>2</b>Kiểm tra</button>
+    <button data-s="3"><b>3</b>Tạo clip</button>
+    <button data-s="4"><b>4</b>Export</button>
+  </nav>
+</header>
+<main>
+  <section class="panel">
+    <!-- 1 INPUT -->
+    <div class="pane on" id="p1">
+      <h2>Nhập content</h2>
+      <p class="hint">Dán script hoặc nội dung thô. Studio sẽ rút gọn thành các cảnh 9:16 theo brand guideline MOVE (Mona Sans / Josefin Sans, đỏ #BE0000, đen #0B1718, tím #A331F4, logo, pattern M-motif).</p>
+      <textarea id="raw" placeholder="Dán content vào đây…"></textarea>
+      <div class="row" style="margin-top:12px">
+        <label class="f" style="margin:0">Thời lượng mục tiêu</label>
+        <input type="range" id="target" min="15" max="45" step="1" value="40" style="width:180px;accent-color:var(--red)"><b id="targetV">40s</b>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <button class="btn red" id="aiParse">Kiểm tra &amp; chia cảnh với Claude</button>
+        <button class="btn ghost" id="quickParse">Chia cảnh nhanh (không AI)</button>
+        <button class="btn ghost" id="loadSample">Dùng mẫu: Đăng ký biển số</button>
+      </div>
+      <div class="msg" id="m1"></div>
+      <div id="driveBox" style="display:none;margin-top:28px;padding-top:18px;border-top:1px solid var(--line)">
+        <label class="f">Google Drive của team</label>
+        <div class="row"><input type="password" id="pass" placeholder="Mã truy cập team" style="max-width:220px"><button class="btn ghost" id="connect">Kết nối</button><span class="note" id="driveSt">Chưa kết nối</span></div>
+        <div class="row" id="projRow" style="margin-top:10px;display:none"><select id="projList" style="max-width:380px"></select><button class="btn ghost sm" id="openProj">Mở dự án</button><button class="btn ghost sm" id="refreshProj">↻</button></div>
+      </div>
+    </div>
+    <!-- 2 CHECK -->
+    <div class="pane" id="p2">
+      <h2>Kiểm tra content</h2>
+      <p class="hint">Sửa trực tiếp từng cảnh. Kết quả kiểm tra cập nhật ngay (thời lượng, tràn vùng an toàn, tốc độ đọc, tỉ lệ màu, nhận xét content).</p>
+      <label class="f">Tên dự án</label><input type="text" id="projName" placeholder="VD: Dang-ky-bien-so-xe-dien" style="margin-bottom:16px">
+      <div class="checks" id="checks"></div>
+      <div id="scenes"></div>
+      <div class="row"><button class="btn ghost sm" id="addScene">+ Thêm cảnh</button><span style="flex:1"></span><button class="btn ghost drive-only" id="saveProj" style="display:none">Lưu dự án lên Drive</button><button class="btn red" data-go="3">Tạo clip →</button></div>
+      <div class="msg" id="m2"></div>
+    </div>
+    <!-- 3 CREATE -->
+    <div class="pane" id="p3">
+      <h2>Tạo clip animation</h2>
+      <p class="hint">Clip được dựng tự động từ các cảnh: chuyển cảnh quét xéo theo góc motif, chữ xuất hiện lần lượt, SFX + nhạc nền tự tổng hợp (không dùng âm thanh bên ngoài, không rủi ro bản quyền).</p>
+      <div class="checks" id="sum3"></div>
+      <label class="f">Âm thanh</label>
+      <div class="opt" id="audioOpt">
+        <label><input type="radio" name="aud" value="all" checked><b>SFX + nhạc nền</b><span>Nhạc pad 100 BPM tự tạo</span></label>
+        <label><input type="radio" name="aud" value="sfx"><b>Chỉ SFX</b><span>Whoosh, tick, ding…</span></label>
+        <label><input type="radio" name="aud" value="none"><b>Không âm thanh</b><span>Để tự lồng tiếng sau</span></label>
+      </div>
+      <div class="row" style="margin-top:16px"><button class="btn ghost" data-go="2">← Sửa cảnh</button><span style="flex:1"></span><button class="btn red" data-go="4">Chọn định dạng export →</button></div>
+    </div>
+    <!-- 4 EXPORT -->
+    <div class="pane" id="p4">
+      <h2>Export</h2>
+      <p class="hint">Mã hóa ngay trong trình duyệt. Khuyên dùng Chrome / Edge bản mới để xuất MP4 nhanh.</p>
+      <label class="f">Định dạng</label>
+      <div class="opt" id="fmtOpt"></div>
+      <label class="f">Độ phân giải</label>
+      <div class="opt">
+        <label><input type="radio" name="res" value="1080" checked><b>1080 × 1920</b><span>TikTok, Reels, Shorts</span></label>
+        <label><input type="radio" name="res" value="720"><b>720 × 1280</b><span>Nhẹ, gửi duyệt nhanh</span></label>
+      </div>
+      <label class="f">Khung hình / chất lượng</label>
+      <div class="opt">
+        <label><input type="radio" name="fps" value="30" checked><b>30 fps</b><span>Chuẩn mạng xã hội</span></label>
+        <label><input type="radio" name="fps" value="60"><b>60 fps</b><span>Mượt hơn, file lớn hơn</span></label>
+        <label><input type="radio" name="q" value="12" checked><b>Cao</b><span>~12 Mbps</span></label>
+        <label><input type="radio" name="q" value="6"><b>Tiêu chuẩn</b><span>~6 Mbps</span></label>
+      </div>
+      <label class="drive-only" style="display:none;margin-top:12px;font-size:13px"><input type="checkbox" id="autoDrive" checked> Tự lưu video + dự án vào Google Drive của team sau khi export</label>
+      <div class="row" style="margin-top:16px"><button class="btn red" id="exportBtn">Export clip</button><button class="btn ghost" id="saveBtn" style="display:none">Tải về máy</button><button class="btn ghost drive-only" id="driveBtn" style="display:none">Lưu lên Drive</button></div>
+      <div class="bar"><i id="prog"></i></div>
+      <div class="note" id="m4"></div>
+      <div class="note" id="m4d"></div>
+      <video class="out" id="outVid" controls playsinline></video>
+    </div>
+  </section>
+  <aside class="side">
+    <div class="stage"><canvas id="cv" width="720" height="1280"></canvas></div>
+    <div class="ctrl"><button class="btn sm" id="play">▶</button><input type="range" id="scrub" min="0" max="1000" value="0"><span class="tm" id="tm">0.0 / 0.0s</span></div>
+    <div class="toggles"><label><input type="checkbox" id="safeT" checked> Vùng an toàn</label><label><input type="checkbox" id="sndT" checked> Âm thanh preview</label></div>
+  </aside>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/webm-muxer@5.1.4/build/webm-muxer.js"></script>
+<script src="engine.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
