@@ -16,7 +16,7 @@ const TH = {
 };
 const LAYOUT_NAMES = { default: 'Chuẩn (trên xuống)', center: 'Câu chốt giữa màn hình', bignum: 'Số lớn / con số', quote: 'Trích dẫn', compare: 'So sánh 2 cột', cards: 'Thẻ 2×2', artTop: 'Hình trên, chữ dưới' };
 const BG_NAMES = { red: 'Đỏ MOVE', black: 'Đen', white: 'Trắng', grad: 'Gradient Đen → Đỏ' };
-const ART_NAMES = { none: 'Không', scooter: 'Xe điện', tax: 'Cơ quan thuế', store: 'Cửa hàng', plate: 'Biển số', phone: 'Điện thoại + thư', docs: 'Giấy tờ', helmet: 'Mũ bảo hiểm', clock: 'Đồng hồ chờ', charger: 'Trụ sạc', battery: 'Pin', plug: 'Ổ cắm / sạc tại nhà', bolt: 'Tia điện', route: 'Quãng đường (km)', gauge: 'Đồng hồ tốc độ', shield: 'Bảo hành', service: 'Bảo dưỡng', app: 'App / khóa thông minh', gift: 'Quà tặng / khuyến mãi', calendar: 'Lịch hẹn', photo: '📷 Ảnh tải lên', price: 'Giá / ưu đãi', key: 'Chìa khóa thông minh', swap: 'Thu xăng đổi điện' };
+const ART_NAMES = { none: 'Không', scooter: 'Xe điện', bikeBig: 'Xe ga bánh lớn (ảnh 1)', bikeTarget: 'MOVE Target', bikeDinking: 'MOVE DinKing', tax: 'Cơ quan thuế', store: 'Cửa hàng', plate: 'Biển số', phone: 'Điện thoại + thư', docs: 'Giấy tờ', helmet: 'Mũ bảo hiểm', clock: 'Đồng hồ chờ', charger: 'Trụ sạc', battery: 'Pin', plug: 'Ổ cắm / sạc tại nhà', bolt: 'Tia điện', route: 'Quãng đường (km)', gauge: 'Đồng hồ tốc độ', shield: 'Bảo hành', service: 'Bảo dưỡng', app: 'App / khóa thông minh', gift: 'Quà tặng / khuyến mãi', calendar: 'Lịch hẹn', photo: '📷 Ảnh tải lên', price: 'Giá / ưu đãi', key: 'Chìa khóa thông minh', swap: 'Thu xăng đổi điện' };
 const WIPE = 0.38;
 
 // ---------- assets
@@ -95,15 +95,16 @@ function drawLogo(c, x, y, w, color, alpha = 1) { const img = tinted(A.logo, col
 // ---------- flat illustrations (palette only). Each: {w,h,draw(c, theme)}
 const bgOf = th => th === TH.red ? C.RED : th === TH.white ? C.WHITE : C.BLACK;
 const ART = {
-  scooter: { w: 720, h: 380, draw(c) {
-    for (const x of [150, 560]) { el(c, x, 300, 74, 74, C.BLACK); el(c, x, 300, 40, 40, C.NEUTRAL); el(c, x, 300, 14, 14, C.WHITE); }
-    poly(c, [[70, 210], [110, 150], [330, 138], [380, 205], [360, 262], [110, 262]], C.WHITE);
+  scooter: { w: 720, h: 380, draw(c, th) {
+    const K = th === TH.black || th === TH.grad ? '#323D3F' : C.BLACK;
+    for (const x of [150, 560]) { el(c, x, 300, 74, 74, K); el(c, x, 300, 40, 40, C.NEUTRAL); el(c, x, 300, 14, 14, C.WHITE); }
+    poly(c, [[70, 210], [110, 150], [330, 138], [380, 205], [360, 262], [110, 262]], th === TH.white ? '#E6E6E6' : C.WHITE);
     poly(c, [[150, 262], [300, 262], [250, 300], [150, 300]], mix(C.WHITE, C.RED, .8));
-    rr(c, 150, 112, 340, 146, 16, C.BLACK); rr(c, 320, 240, 500, 268, 10, C.WHITE);
-    poly(c, [[480, 268], [505, 130], [548, 92], [572, 104], [540, 268]], C.WHITE);
-    ln(c, [[560, 220], [562, 300]], C.BLACK, 18); ln(c, [[552, 100], [530, 40]], C.BLACK, 14); ln(c, [[495, 40], [575, 40]], C.BLACK, 14);
+    rr(c, 150, 112, 340, 146, 16, K); rr(c, 320, 240, 500, 268, 10, th === TH.white ? '#E6E6E6' : C.WHITE);
+    poly(c, [[480, 268], [505, 130], [548, 92], [572, 104], [540, 268]], th === TH.white ? '#E6E6E6' : C.WHITE);
+    ln(c, [[560, 220], [562, 300]], K, 18); ln(c, [[552, 100], [530, 40]], K, 14); ln(c, [[495, 40], [575, 40]], K, 14);
     el(c, 578, 120, 16, 12, C.PURPLE); poly(c, [[60, 228], [54, 214], [75, 212]], C.RED);
-    rr(c, 40, 228, 104, 262, 6, C.WHITE, C.BLACK, 4); ctext(c, 72, 246, '?', '700 24px "Mona Sans"', C.BLACK);
+    rr(c, 40, 228, 104, 262, 6, C.WHITE, K, 4); ctext(c, 72, 246, '?', '700 24px "Mona Sans"', K);
   } },
   tax: { w: 560, h: 300, draw(c, th) {
     const base = th === TH.white ? C.BLACK : C.WHITE, shade = th === TH.white ? C.NEUTRAL : mix(C.WHITE, C.RED, .8);
@@ -157,6 +158,61 @@ const ART = {
     for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; ln(c, [[180 + Math.cos(a) * 110, 190 + Math.sin(a) * 110], [180 + Math.cos(a) * 122, 190 + Math.sin(a) * 122]], ring, 6); }
     ln(c, [[180, 190], [180, 110]], ring, 12); ln(c, [[180, 190], [240, 220]], C.PURPLE, 10); el(c, 180, 190, 12, 12, C.PURPLE);
     rr(c, 150, 10, 210, 36, 8, ring);
+  } },
+  // ---- MOVE models (flat, facing right, no centre stand)
+  bikeBig: { w: 720, h: 380, draw(c, th) {
+    const K = th === TH.black || th === TH.grad ? '#323D3F' : C.BLACK;
+    const body = th === TH.white ? '#E6E6E6' : C.WHITE, chrome = mix(C.NEUTRAL, C.WHITE, .45), shade = th === TH.white ? '#CFCFCF' : mix(C.WHITE, C.RED, .82);
+    el(c, 375, 372, 300, 8, 'rgba(0,0,0,0.18)');
+    for (const [x, r] of [[150, 80], [602, 80]]) { el(c, x, 296, r, r, K); el(c, x, 296, r - 20, r - 20, chrome); for (let k = 0; k < 5; k++) { const a = k * Math.PI * 2 / 5 - Math.PI / 2; ln(c, [[x, 296], [x + Math.cos(a) * (r - 24), 296 + Math.sin(a) * (r - 24)]], K, 7); } el(c, x, 296, 14, 14, K); }
+    rr(c, 140, 268, 330, 300, 14, mix(C.NEUTRAL, K, .6));
+    poly(c, [[58, 222], [92, 168], [170, 150], [400, 140], [468, 152], [500, 214], [470, 262], [130, 268]], body);
+    poly(c, [[180, 262], [460, 258], [440, 286], [210, 288]], shade);
+    ln(c, [[175, 205], [420, 186]], K, 6);
+    rr(c, 128, 114, 418, 150, 18, K); ln(c, [[52, 136], [140, 124]], chrome, 9);
+    poly(c, [[54, 176], [96, 160], [100, 178], [58, 192]], C.RED);
+    rr(c, 418, 246, 560, 272, 10, K);
+    poly(c, [[538, 272], [556, 134], [598, 92], [626, 98], [618, 272]], body);
+    poly(c, [[560, 272], [574, 142], [594, 118], [588, 272]], K);
+    poly(c, [[588, 214], [652, 210], [690, 246], [612, 248]], body);
+    ln(c, [[612, 140], [600, 296]], chrome, 14);
+    rr(c, 586, 34, 652, 86, 22, K); ln(c, [[562, 52], [610, 52]], K, 12);
+    el(c, 642, 112, 16, 10, C.PURPLE);
+  } },
+  bikeTarget: { w: 720, h: 380, draw(c, th) {
+    const K = th === TH.black || th === TH.grad ? '#323D3F' : C.BLACK;
+    const body = th === TH.white ? '#E6E6E6' : C.WHITE, rim = mix(C.NEUTRAL, K, .55);
+    el(c, 375, 372, 290, 8, 'rgba(0,0,0,0.18)');
+    for (const x of [160, 592]) { el(c, x, 302, 74, 74, K); el(c, x, 302, 50, 50, rim); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; ln(c, [[x, 302], [x + Math.cos(a) * 46, 302 + Math.sin(a) * 46]], K, 6); } el(c, x, 302, 12, 12, mix(C.NEUTRAL, C.WHITE, .5)); }
+    rr(c, 150, 272, 320, 302, 14, mix(C.NEUTRAL, K, .6));
+    poly(c, [[66, 224], [104, 164], [330, 148], [420, 158], [452, 220], [432, 262], [132, 270]], body);
+    ln(c, [[200, 214], [404, 198]], C.RED, 6); ln(c, [[200, 226], [330, 216]], K, 4);
+    rr(c, 150, 116, 404, 150, 18, K); ln(c, [[66, 146], [150, 136]], K, 9);
+    poly(c, [[60, 176], [100, 162], [104, 180], [64, 192]], C.RED);
+    rr(c, 420, 248, 556, 272, 10, K);
+    poly(c, [[536, 272], [552, 140], [588, 96], [612, 102], [606, 272]], body);
+    ln(c, [[560, 246], [574, 150]], C.RED, 5);
+    poly(c, [[566, 232], [640, 226], [668, 262], [604, 256]], K);
+    ln(c, [[600, 140], [590, 302]], K, 14);
+    rr(c, 576, 46, 640, 92, 22, K); ln(c, [[552, 62], [600, 62]], K, 12);
+    el(c, 636, 116, 15, 10, C.PURPLE);
+  } },
+  bikeDinking: { w: 720, h: 380, draw(c, th) {
+    const K = th === TH.black || th === TH.grad ? '#323D3F' : C.BLACK;
+    const silver = th === TH.white ? '#D3D6D8' : '#E3E5E7', dark = mix(C.NEUTRAL, K, .55), chrome = C.WHITE;
+    el(c, 375, 370, 280, 8, 'rgba(0,0,0,0.18)');
+    for (const x of [172, 584]) { el(c, x, 308, 66, 66, K); el(c, x, 308, 40, 40, dark); el(c, x, 308, 18, 18, mix(C.NEUTRAL, C.WHITE, .5)); }
+    rr(c, 170, 280, 330, 306, 13, dark); rr(c, 250, 282, 330, 300, 9, mix(C.NEUTRAL, C.WHITE, .6));
+    c.beginPath(); c.moveTo(70, 262); c.bezierCurveTo(52, 190, 120, 148, 250, 146); c.lineTo(420, 150); c.bezierCurveTo(470, 156, 488, 214, 470, 266); c.closePath(); c.fillStyle = silver; c.fill();
+    ln(c, [[318, 206], [392, 200]], chrome, 7); ln(c, [[326, 224], [398, 218]], chrome, 7);
+    rr(c, 150, 116, 410, 154, 22, K); for (let k = 0; k < 6; k++) ln(c, [[186 + k * 38, 124], [180 + k * 38, 146]], mix(C.NEUTRAL, K, .4), 3);
+    ln(c, [[78, 140], [150, 132]], K, 9); poly(c, [[58, 196], [84, 186], [86, 214], [62, 220]], C.RED);
+    rr(c, 430, 254, 548, 276, 10, K);
+    c.beginPath(); c.moveTo(526, 276); c.bezierCurveTo(520, 200, 540, 120, 588, 92); c.lineTo(608, 96); c.bezierCurveTo(590, 150, 584, 220, 590, 276); c.closePath(); c.fillStyle = silver; c.fill();
+    c.beginPath(); c.moveTo(548, 270); c.bezierCurveTo(546, 210, 556, 150, 584, 116); c.lineTo(588, 270); c.closePath(); c.fillStyle = K; c.fill();
+    c.beginPath(); c.moveTo(540, 262); c.bezierCurveTo(560, 214, 630, 214, 650, 262); c.closePath(); c.fillStyle = silver; c.fill(); el(c, 636, 248, 8, 8, C.RED);
+    ln(c, [[598, 130], [586, 308]], dark, 14);
+    rr(c, 566, 36, 640, 88, 12, silver); el(c, 640, 64, 16, 16, C.WHITE); el(c, 640, 64, 10, 10, C.PURPLE); ln(c, [[546, 50], [586, 50]], K, 12);
   } },
   // ---- EV industry set
   charger: { w: 420, h: 400, draw(c, th) {
@@ -309,7 +365,7 @@ function layoutScene(s, idx) {
     const a = s.art === 'photo' ? photoArt(s) : ART[s.art], trackH = s.pattern && !s.logoBig ? 52 : 0;
     const room = Math.min(maxH, SAFE.y1 - y - trackH), scale = Math.min(1, room / a.h, maxW / a.w);
     if (scale < 0.45) { warn.push(`Không đủ chỗ cho hình "${ART_NAMES[s.art]}" — rút gọn chữ hoặc bỏ hình.`); return; }
-    const aw = a.w * scale, ah = a.h * scale, ride = s.art === 'scooter' || (s.art === 'photo' && !!s.artRide);
+    const aw = a.w * scale, ah = a.h * scale, ride = s.art === 'scooter' || /^bike/.test(s.art) || (s.art === 'photo' && !!s.artRide);
     const ay = after ? y + Math.max(0, (room - ah) / 2) * (ride ? 0 : 1) : y;
     const t0 = ride ? Math.max(0.9, t - 0.3) : t, ax = s.align === 'right' ? SAFE.x1 - aw : X + (maxW - aw) / 2;
     push({ t0, y: ay, h: ah, d: ride ? 1.0 : 0.55, dy: ride ? 0 : 60, sfx: ride ? 'whoosh' : 'pop', ride, draw: (cc, yy, k) => {

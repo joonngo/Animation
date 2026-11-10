@@ -165,7 +165,7 @@ Scene = {
  "sub": chú thích phụ ≤ 90 ký tự hoặc "",
  "hi": tối đa 3 từ đơn cần nhấn mạnh, phải xuất hiện nguyên văn trong title/body/tip,
  "layout": "default"|"center"|"bignum"|"quote"|"compare"|"cards"|"artTop" (center: 1 câu chốt; bignum: title là con số/ngắn như "1–2 tuần", "120 km"; compare: items[0] là tiêu đề 2 cột {"t":"Xe xăng","n":"Xe điện"}, các item sau {"t":vế trái,"n":vế phải}; cards: 2–4 items dạng thẻ; artTop: hình to ở trên),
- "art": "none"|"scooter"|"tax"|"store"|"plate"|"phone"|"docs"|"helmet"|"clock"|"charger"|"battery"|"plug"|"bolt"|"route"|"gauge"|"shield"|"service"|"app"|"gift"|"calendar"|"price"|"key"|"swap",
+ "art": "none"|"scooter"|"bikeBig"|"bikeTarget"|"bikeDinking"|"tax"|"store"|"plate"|"phone"|"docs"|"helmet"|"clock"|"charger"|"battery"|"plug"|"bolt"|"route"|"gauge"|"shield"|"service"|"app"|"gift"|"calendar"|"price"|"key"|"swap",
  "align": "center"|"right",
  "pattern": true|false,
  "logoBig": true|false,
