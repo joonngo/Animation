@@ -96,17 +96,18 @@ function idb() { return new Promise((res, rej) => { try { const q = indexedDB.op
 async function imgPut(id, blob) { memImgs.set(id, blob); try { const d = await idb(); await new Promise((res, rej) => { const tx = d.transaction('img', 'readwrite'); tx.objectStore('img').put(blob, id); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); } catch (e) {} }
 async function imgGet(id) { if (memImgs.has(id)) return memImgs.get(id); try { const d = await idb(); return await new Promise(res => { const q = d.transaction('img').objectStore('img').get(id); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); } catch (e) { return null; } }
 async function loadImg(id) { if (!id || E.hasImage(id)) return; const b = await imgGet(id); if (b) { const bm = await createImageBitmap(b); E.setImage(id, bm); } }
-async function loadAllImgs() { await Promise.all(state.scenes.map(s => loadImg(s.bgImg))); drawPreview(); }
-async function prepPhoto(file) {
-  const bm = await createImageBitmap(file), mx = 1600, sc = Math.min(1, mx / Math.max(bm.width, bm.height));
+async function loadAllImgs() { await Promise.all(state.scenes.flatMap(s => [loadImg(s.bgImg), loadImg(s.artImg)])); changed(); }
+async function prepPhoto(file, keepAlpha) {
+  const bm = await createImageBitmap(file), mx = keepAlpha ? 1200 : 1600, sc = Math.min(1, mx / Math.max(bm.width, bm.height));
   const cv = document.createElement('canvas'); cv.width = Math.round(bm.width * sc); cv.height = Math.round(bm.height * sc);
   cv.getContext('2d').drawImage(bm, 0, 0, cv.width, cv.height);
-  const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.85));
+  const alpha = keepAlpha && /png|webp|gif/i.test(file.type);
+  const blob = await new Promise(r => cv.toBlob(r, alpha ? 'image/png' : 'image/jpeg', 0.88));
   const id = 'img_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   await imgPut(id, blob); E.setImage(id, await createImageBitmap(blob)); return id;
 }
 const blobToData = b => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(b); });
-async function packImages() { const out = {}; for (const s of state.scenes) if (s.bgImg && !out[s.bgImg]) { const b = await imgGet(s.bgImg); if (b) out[s.bgImg] = await blobToData(b); } return out; }
+async function packImages() { const out = {}; for (const s of state.scenes) for (const id of [s.bgImg, s.artImg]) if (id && !out[id]) { const b = await imgGet(id); if (b) out[id] = await blobToData(b); } return out; }
 async function unpackImages(images) { for (const [id, data] of Object.entries(images || {})) { const b = await (await fetch(data)).blob(); await imgPut(id, b); E.setImage(id, await createImageBitmap(b)); } }
 
 // ---------------- navigation
@@ -196,6 +197,7 @@ function sanitize(s) {
     items: Array.isArray(s.items) ? s.items.slice(0, 5).map(i => ({ t: (i && (i.t || i.text)) || String(i || ''), n: (i && i.n) || '' })).filter(i => i.t) : [],
     itemStyle: pick(s.itemStyle, ['num', 'check', 'timeline', 'none'], 'num'), hi: Array.isArray(s.hi) ? s.hi.slice(0, 4) : [],
     layout: pick(s.layout, Object.keys(E.LAYOUT_NAMES), 'default'), art: pick(s.art, Object.keys(E.ART_NAMES), 'none'), align: s.align === 'right' ? 'right' : 'center',
+    artImg: s.artImg || '', artStyle: ['card', 'cutout', 'circle'].includes(s.artStyle) ? s.artStyle : 'card', artRide: !!s.artRide,
     bgImg: s.bgImg || '', bgDim: s.bgDim === undefined || s.bgDim === '' ? 0.55 : +s.bgDim, bgPos: ['top', 'center', 'bottom'].includes(s.bgPos) ? s.bgPos : 'center', kenburns: s.kenburns !== false,
     pattern: !!s.pattern, logoBig: !!s.logoBig, sfx: s.sfx === 'alert' ? 'alert' : 'whoosh', dur: +s.dur > 0 ? Math.min(9, Math.max(2.5, +s.dur)) : 0,
   };
@@ -239,6 +241,7 @@ function checks() {
     e.L.warn.forEach(w => { const px = +((w.match(/(\d+)px/) || [])[1] || 0); out.push({ level: /tràn/.test(w) && px > 40 ? 'error' : 'warn', text: `Cảnh ${i + 1}: ${w}`, i }); });
     const need = e.L.words / 6; if (need > e.dur * 2) out.push({ level: 'warn', text: `Cảnh ${i + 1}: dày chữ (${e.L.words} chữ, cần ~${need.toFixed(1)}s để đọc hết, đang ${e.dur.toFixed(1)}s) — rút gọn hoặc tăng thời lượng.`, i });
     if (e.L.lastAppear > e.dur - 0.6) out.push({ level: 'warn', text: `Cảnh ${i + 1}: phần tử cuối xuất hiện quá sát lúc chuyển cảnh — tăng thời lượng.`, i });
+    if (e.s.art === 'photo' && !(e.s.artImg && E.hasImage(e.s.artImg))) out.push({ level: 'warn', text: `Cảnh ${i + 1}: đã chọn "Ảnh tải lên" nhưng chưa có ảnh.`, i });
     if ((e.s.title || '').length > 60) out.push({ level: 'warn', text: `Cảnh ${i + 1}: tiêu đề dài (${e.s.title.length} ký tự).`, i });
     (e.s.hi || []).forEach(h => { const txt = [e.s.title, e.s.body, e.s.tip].join(' '); if (h && !txt.includes(h)) out.push({ level: 'info', text: `Cảnh ${i + 1}: từ nhấn mạnh "${h}" không có trong chữ.`, i }); });
   });
@@ -287,6 +290,13 @@ function renderEditor() {
           <div><label class="f">Kiểu danh sách</label><select data-k="itemStyle">${[['num', 'Đánh số'], ['check', 'Checklist'], ['timeline', 'Timeline'], ['none', 'Không ký hiệu']].map(([k, v]) => `<option value="${k}" ${s.itemStyle === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
             <label class="f">Nhấn mạnh (từ, cách nhau dấu phẩy)</label><input type="text" data-k="hi" value="${esc((s.hi || []).join(', '))}"></div>
         </div>
+        ${s.art === 'photo' ? `<label class="f">Ảnh thay cho hình graphic</label>
+        <div class="row" style="gap:8px">
+          <label class="btn ${s.artImg ? 'ghost' : 'red'} sm" style="cursor:pointer">${s.artImg ? 'Đổi ảnh' : 'Tải ảnh lên'}<input type="file" accept="image/*" data-artphoto style="display:none"></label>
+          <select data-k="artStyle" style="width:auto"><option value="card" ${s.artStyle !== 'cutout' && s.artStyle !== 'circle' ? 'selected' : ''}>Khung bo góc</option><option value="cutout" ${s.artStyle === 'cutout' ? 'selected' : ''}>Ảnh tách nền (PNG, không khung)</option><option value="circle" ${s.artStyle === 'circle' ? 'selected' : ''}>Khung tròn</option></select>
+          <label style="font-size:12px"><input type="checkbox" data-k="artRide" ${s.artRide ? 'checked' : ''}> Trượt vào từ trái (như xe chạy)</label>
+          ${s.artImg ? '' : '<span class="note">Ảnh sản phẩm/xe thật. Dùng PNG tách nền để xe "đứng" trên nền màu MOVE.</span>'}
+        </div>` : ''}
         <label class="f">Ảnh nền thật</label>
         <div class="row" style="gap:8px">
           <label class="btn ghost sm" style="cursor:pointer">${s.bgImg ? 'Đổi ảnh' : 'Tải ảnh lên'}<input type="file" accept="image/*" data-photo style="display:none"></label>
@@ -326,11 +336,14 @@ function renderEditor() {
         s[k] = v; changed();
         if (k === 'title') d.querySelector('.t').textContent = `${i + 1}. ${s.title || '(chưa có tiêu đề)'}`;
         if (k === 'bg') d.querySelector('.sw').style.background = bgSw[s.bg];
+        if (k === 'art') { renderEditor(); }
         seekScene(i);
       };
       inp.addEventListener(inp.tagName === 'SELECT' || inp.type === 'checkbox' ? 'change' : 'input', fn);
     });
     const ni = d.querySelector('[data-a=noimg]'); if (ni) ni.onclick = () => { s.bgImg = ''; changed(); renderEditor(); seekScene(i); };
+    const ap = d.querySelector('[data-artphoto]');
+    if (ap) ap.onchange = async () => { const f = ap.files[0]; if (!f) return; try { s.artImg = await prepPhoto(f, true); if (/png|webp/i.test(f.type) && (!s.artStyle || s.artStyle === 'card')) s.artStyle = 'cutout'; changed(); renderEditor(); seekScene(i); } catch (err) { alertMsg('Không đọc được ảnh: ' + err.message); } };
     const ph = d.querySelector('[data-photo]');
     if (ph) ph.onchange = async () => { const f = ph.files[0]; if (!f) return; try { s.bgImg = await prepPhoto(f); if (s.bg === 'white') s.bg = 'black'; changed(); renderEditor(); seekScene(i); } catch (err) { alertMsg('Không đọc được ảnh: ' + err.message); } };
     box.appendChild(d);

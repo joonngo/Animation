@@ -16,7 +16,7 @@ const TH = {
 };
 const LAYOUT_NAMES = { default: 'Chuẩn (trên xuống)', center: 'Câu chốt giữa màn hình', bignum: 'Số lớn / con số', quote: 'Trích dẫn', compare: 'So sánh 2 cột', cards: 'Thẻ 2×2', artTop: 'Hình trên, chữ dưới' };
 const BG_NAMES = { red: 'Đỏ MOVE', black: 'Đen', white: 'Trắng', grad: 'Gradient Đen → Đỏ' };
-const ART_NAMES = { none: 'Không', scooter: 'Xe điện', tax: 'Cơ quan thuế', store: 'Cửa hàng', plate: 'Biển số', phone: 'Điện thoại + thư', docs: 'Giấy tờ', helmet: 'Mũ bảo hiểm', clock: 'Đồng hồ chờ', charger: 'Trụ sạc', battery: 'Pin', plug: 'Ổ cắm / sạc tại nhà', bolt: 'Tia điện', route: 'Quãng đường (km)', gauge: 'Đồng hồ tốc độ', shield: 'Bảo hành', service: 'Bảo dưỡng', app: 'App / khóa thông minh', gift: 'Quà tặng / khuyến mãi', calendar: 'Lịch hẹn', price: 'Giá / ưu đãi', key: 'Chìa khóa thông minh', swap: 'Thu xăng đổi điện' };
+const ART_NAMES = { none: 'Không', scooter: 'Xe điện', tax: 'Cơ quan thuế', store: 'Cửa hàng', plate: 'Biển số', phone: 'Điện thoại + thư', docs: 'Giấy tờ', helmet: 'Mũ bảo hiểm', clock: 'Đồng hồ chờ', charger: 'Trụ sạc', battery: 'Pin', plug: 'Ổ cắm / sạc tại nhà', bolt: 'Tia điện', route: 'Quãng đường (km)', gauge: 'Đồng hồ tốc độ', shield: 'Bảo hành', service: 'Bảo dưỡng', app: 'App / khóa thông minh', gift: 'Quà tặng / khuyến mãi', calendar: 'Lịch hẹn', photo: '📷 Ảnh tải lên', price: 'Giá / ưu đãi', key: 'Chìa khóa thông minh', swap: 'Thu xăng đổi điện' };
 const WIPE = 0.38;
 
 // ---------- assets
@@ -262,6 +262,23 @@ const ART = {
   } },
 };
 
+// ---------- uploaded image used in place of a flat graphic
+function hasArt(s) { return s.art === 'photo' ? !!(s.artImg && IMG.has(s.artImg)) : !!(s.art && s.art !== 'none' && ART[s.art]); }
+function photoArt(s) {
+  const img = IMG.get(s.artImg), st = s.artStyle || 'card';
+  let w = 900, h = w * img.height / img.width; if (h > 900) { h = 900; w = h * img.width / img.height; }
+  if (st === 'circle') { w = h = 720; }
+  return { w, h, draw(c, th) {
+    if (st === 'cutout') { c.drawImage(img, 0, 0, w, h); return; }
+    c.save(); c.beginPath();
+    if (st === 'circle') c.arc(w / 2, h / 2, w / 2, 0, Math.PI * 2); else c.roundRect(0, 0, w, h, 36);
+    c.clip();
+    const sc = Math.max(w / img.width, h / img.height), dw = img.width * sc, dh = img.height * sc;
+    c.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh); c.restore();
+    c.beginPath(); if (st === 'circle') c.arc(w / 2, h / 2, w / 2 - 4, 0, Math.PI * 2); else c.roundRect(4, 4, w - 8, h - 8, 34);
+    c.lineWidth = 8; c.strokeStyle = th === TH.white ? C.RED : C.WHITE; c.stroke();
+  } };
+}
 // ---------- motion helpers
 const ease = x => { x = Math.max(0, Math.min(1, x)); return 1 - Math.pow(1 - x, 3); };
 function bgFill(c, kind) {
@@ -289,10 +306,10 @@ function layoutScene(s, idx) {
   const txt = (b, x = X, w = maxW, al = AL) => (cc, yy) => b.draw(cc, x, yy, al, w);
   let artDone = false;
   const placeArt = (maxH, after) => {
-    const a = ART[s.art], trackH = s.pattern && !s.logoBig ? 52 : 0;
+    const a = s.art === 'photo' ? photoArt(s) : ART[s.art], trackH = s.pattern && !s.logoBig ? 52 : 0;
     const room = Math.min(maxH, SAFE.y1 - y - trackH), scale = Math.min(1, room / a.h, maxW / a.w);
     if (scale < 0.45) { warn.push(`Không đủ chỗ cho hình "${ART_NAMES[s.art]}" — rút gọn chữ hoặc bỏ hình.`); return; }
-    const aw = a.w * scale, ah = a.h * scale, ride = s.art === 'scooter';
+    const aw = a.w * scale, ah = a.h * scale, ride = s.art === 'scooter' || (s.art === 'photo' && !!s.artRide);
     const ay = after ? y + Math.max(0, (room - ah) / 2) * (ride ? 0 : 1) : y;
     const t0 = ride ? Math.max(0.9, t - 0.3) : t, ax = s.align === 'right' ? SAFE.x1 - aw : X + (maxW - aw) / 2;
     push({ t0, y: ay, h: ah, d: ride ? 1.0 : 0.55, dy: ride ? 0 : 60, sfx: ride ? 'whoosh' : 'pop', ride, draw: (cc, yy, k) => {
@@ -302,7 +319,7 @@ function layoutScene(s, idx) {
     y = ay + ah + trackH + (after ? 0 : 44); t = t0 + (ride ? 1.0 : 0.5); artDone = true;
   };
   if (s.label) { const b = textBlock(c, s.label.toUpperCase(), F.label(), th.acc, maxW); push({ t0: t, y, h: b.height, draw: txt(b) }); y += b.height + 16; t += 0.05; }
-  if (LAY === 'artTop' && s.art && s.art !== 'none' && ART[s.art]) placeArt(460, false);
+  if (LAY === 'artTop' && hasArt(s)) placeArt(460, false);
   if (LAY === 'quote') {
     const qy = y; push({ t0: t, y: qy, h: 150, draw: (cc, yy) => { cc.font = '900 260px "Mona Sans"'; cc.fillStyle = th.acc === C.WHITE ? (s.bg === 'red' ? C.BLACK : C.RED) : th.acc; cc.textBaseline = 'top'; cc.textAlign = 'center'; cc.fillText('“', W / 2, yy - 40); cc.textAlign = 'left'; } });
     y += 150; t += 0.2;
@@ -402,7 +419,7 @@ function layoutScene(s, idx) {
     y = ly + lh; t = t0 + 0.6;
     if (s.pattern) { addTrack(els, ly + lh + 70, 44, t0 + 0.3, 1.0, C.WHITE, 0, W); y += 120; }
   }
-  if (!artDone && s.art && s.art !== 'none' && ART[s.art]) placeArt(9999, true);
+  if (!artDone && hasArt(s)) placeArt(9999, true);
   else if (!artDone && s.pattern && !s.logoBig) { addTrack(els, y + 20, 56, t, 1.1, th.motif, X, SAFE.x1); y += 90; t += 0.6; }
   // vertical centering for statement layouts
   if ((LAY === 'center' || LAY === 'bignum' || LAY === 'quote') && !artDone && !s.logoBig && els.length) {
