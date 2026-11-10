@@ -108,12 +108,12 @@ $('#target').oninput = () => { state.target = +$('#target').value; $('#targetV')
 $('#loadSample').onclick = () => { state.raw = SAMPLE_RAW; $('#raw').value = SAMPLE_RAW; state.scenes = JSON.parse(JSON.stringify(SAMPLE_SCENES)); state.notes = [{ level: 'info', text: 'Đã nạp kịch bản mẫu đã biên tập sẵn (45s).' }]; changed(); go(2); };
 $('#quickParse').onclick = () => {
   if (!state.raw.trim()) return msg('#m1', 'Chưa có content.', true);
-  state.scenes = quickParse(state.raw); state.notes = [{ level: 'warn', text: 'Chia cảnh tự động không dùng AI: câu chữ được cắt theo đoạn — nên rút gọn tay ở bước Kiểm tra.' }];
+  state.scenes = (window.smartSplit ? window.smartSplit(state.raw, state.target) : quickParse(state.raw)).map(sanitize); state.notes = [{ level: 'info', text: 'Chia cảnh tự động theo quy tắc (không dùng AI): đã rút gọn câu, nhận diện bước / danh sách / cảnh báo / checklist và gợi ý hình. Nên đọc lại từng cảnh trước khi xuất.' }];
   changed(); go(2);
 };
 $('#aiParse').onclick = async () => {
   if (!state.raw.trim()) return msg('#m1', 'Chưa có content.', true);
-  if (!backend.ai) return msg('#m1', 'Chưa bật Claude trên backend. Dùng "Chia cảnh nhanh" thay thế.', true);
+  if (!backend.ai) return msg('#m1', 'Chưa bật Claude trên backend. Dùng "Chia cảnh tự động" thay thế.', true);
   const b = $('#aiParse'); b.disabled = true; b.innerHTML = '<span class="spin"></span>Claude đang kiểm tra content…';
   try {
     const j = await api('ai', { prompt: aiPrompt(state.raw, state.target) });
