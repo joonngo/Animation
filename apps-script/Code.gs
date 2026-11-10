@@ -4,13 +4,15 @@
  *
  * Script properties (Project Settings → Script properties):
  *   TEAM_PASSCODE      bắt buộc — mã truy cập của team (KHÔNG đưa lên GitHub)
- *   FOLDER_ID          tuỳ chọn — ID thư mục Drive cố định. Bỏ trống: tự tạo thư mục "MOVE Clip Studio"
+ *   FOLDER_ID          tuỳ chọn — ghi đè thư mục mặc định (DEFAULT_FOLDER_ID bên dưới)
  *   ANTHROPIC_API_KEY  tuỳ chọn — bật nút "Kiểm tra & chia cảnh với Claude"
  *   MODEL              tuỳ chọn — mặc định claude-sonnet-5-5
  *
  * Deploy → New deployment → Web app → Execute as: Me · Who has access: Anyone
  */
 const PROPS = PropertiesService.getScriptProperties();
+// Thư mục cố định: 1.MOVE MATERIAL 2026 / MOVE Clip Studio
+const DEFAULT_FOLDER_ID = '1toRjJ2Wbz3REkiwdW8CRxy3R9722T_Ib';
 
 function doGet() { return out({ ok: true, app: 'MOVE Clip Studio backend' }); }
 function doPost(e) {
@@ -21,7 +23,7 @@ function doPost(e) {
 function out(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 
 function root() {
-  const id = PROPS.getProperty('FOLDER_ID');
+  const id = PROPS.getProperty('FOLDER_ID') || DEFAULT_FOLDER_ID;
   if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
   const f = DriveApp.createFolder('MOVE Clip Studio');
   PROPS.setProperty('FOLDER_ID', f.getId());

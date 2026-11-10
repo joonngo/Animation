@@ -12,7 +12,7 @@ Link web: `https://joonngo.github.io/Animation/`
    | Key | Giá trị |
    |---|---|
    | `TEAM_PASSCODE` | mã truy cập team (bắt buộc, không đưa lên GitHub) |
-   | `FOLDER_ID` | ID thư mục Drive cố định (tuỳ chọn — bỏ trống sẽ tự tạo "MOVE Clip Studio") |
+   | `FOLDER_ID` | tuỳ chọn — mặc định đã trỏ tới `1.MOVE MATERIAL 2026/MOVE Clip Studio` |
    | `ANTHROPIC_API_KEY` | tuỳ chọn — bật nút "Kiểm tra & chia cảnh với Claude" (tính phí API) |
 3. **Deploy → New deployment → Web app** · Execute as: **Me** · Who has access: **Anyone** → Deploy → cấp quyền Drive → copy **Web app URL**.
 4. Dán URL vào `config.js` → `APPS_SCRIPT_URL` → commit.
