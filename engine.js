@@ -436,12 +436,31 @@ function buildTimeline(scenes) {
   return { scenes: out, total: start };
 }
 
+// ---------- real photo backgrounds
+const IMG = new Map();
+function setImage(id, img) { if (img) IMG.set(id, img); else IMG.delete(id); }
+function drawPhoto(c, s, lt, dur) {
+  const img = IMG.get(s.bgImg); if (!img) return false;
+  const iw = img.width, ih = img.height, zoom = s.kenburns === false ? 1 : 1 + 0.07 * Math.min(1, lt / Math.max(dur, 0.1));
+  const sc = Math.max(W / iw, H / ih) * zoom, dw = iw * sc, dh = ih * sc;
+  const fy = s.bgPos === 'top' ? 0 : s.bgPos === 'bottom' ? 1 : 0.5;
+  c.drawImage(img, (W - dw) / 2, (H - dh) * fy, dw, dh);
+  // brand overlay for legibility
+  const a = s.bgDim === undefined || s.bgDim === '' ? 0.55 : +s.bgDim;
+  const col = { red: '190,0,0', black: '11,23,24', white: '255,255,255', grad: '11,23,24' }[s.bg] || '11,23,24';
+  c.fillStyle = `rgba(${col},${a})`; c.fillRect(0, 0, W, H);
+  const g = c.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, `rgba(${col},${Math.min(0.92, a + 0.3)})`); g.addColorStop(0.55, `rgba(${col},${a * 0.4})`); g.addColorStop(1, `rgba(${col},${Math.min(0.85, a + 0.2)})`);
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  if (s.bg === 'grad') { const rg = c.createRadialGradient(W * 1.05, H * 1.02, 0, W * 1.05, H * 1.02, H * 0.95); rg.addColorStop(0, `rgba(190,0,0,${Math.min(0.9, a + 0.2)})`); rg.addColorStop(1, 'rgba(190,0,0,0)'); c.fillStyle = rg; c.fillRect(0, 0, W, H); }
+  return true;
+}
 function drawScene(c, e, lt, prevBg, opts = {}) {
   const s = e.s, th = TH[s.bg] || TH.black;
-  bgFill(c, s.bg);
+  bgFill(c, s.bg); if (s.bgImg) drawPhoto(c, s, lt, e.dur);
   if (prevBg && lt < WIPE) {
     const k = ease(lt / WIPE), x = -500 + (W + 900) * k;
-    c.save(); c.beginPath(); c.moveTo(x, 0); c.lineTo(W + 10, 0); c.lineTo(W + 10, H); c.lineTo(x - 420, H); c.closePath(); c.clip(); bgFill(c, prevBg); c.restore();
+    c.save(); c.beginPath(); c.moveTo(x, 0); c.lineTo(W + 10, 0); c.lineTo(W + 10, H); c.lineTo(x - 420, H); c.closePath(); c.clip(); bgFill(c, prevBg.s.bg); if (prevBg.s.bgImg) drawPhoto(c, prevBg.s, prevBg.dur, prevBg.dur); c.restore();
   }
   const fade = Math.max(0, Math.min(1, (e.dur - lt) / 0.22));
   if (!s.logoBig) drawLogo(c, (W - 360) / 2, SAFE.y0 + 10, 360, th.logo);
@@ -466,7 +485,7 @@ function renderAt(c, tl, t, opts) {
   t = Math.max(0, Math.min(tl.total - 1e-4, t));
   let i = tl.scenes.findIndex(e => t < e.start + e.dur); if (i < 0) i = tl.scenes.length - 1;
   const e = tl.scenes[i]; if (!e) { c.fillStyle = C.BLACK; c.fillRect(0, 0, W, H); return; }
-  drawScene(c, e, t - e.start, i > 0 ? tl.scenes[i - 1].s.bg : null, opts);
+  drawScene(c, e, t - e.start, i > 0 ? tl.scenes[i - 1] : null, opts);
 }
 
 // ---------- audio: everything synthesized (no third-party audio, no copyright)
@@ -512,5 +531,5 @@ async function renderAudio(tl, { music = true, sfx = true, sr = 48000 } = {}) {
   return ac.startRendering();
 }
 
-window.MoveEngine = { LAYOUT_NAMES, fontsOK: () => !!A.fontsOK, W, H, SAFE, C, TH, BG_NAMES, ART_NAMES, loadAssets, buildTimeline, renderAt, renderAudio, layoutScene, sceneWords };
+window.MoveEngine = { setImage, hasImage: id => IMG.has(id), LAYOUT_NAMES, fontsOK: () => !!A.fontsOK, W, H, SAFE, C, TH, BG_NAMES, ART_NAMES, loadAssets, buildTimeline, renderAt, renderAudio, layoutScene, sceneWords };
 })();

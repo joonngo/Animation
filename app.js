@@ -32,7 +32,7 @@ const SAMPLE_SCENES = [
   { bg: 'red', title: 'Rước em xe điện mới về nhà rồi?', body: 'Chưa có biển số thì em ấy mới chỉ là đồ trang trí phòng khách thôi.', art: 'scooter', pattern: true, dur: 3.4 },
   { bg: 'grad', label: 'Làm giấy tờ xe điện', title: '4 bước để lăn bánh', itemStyle: 'num', items: [{ t: 'Đóng lệ phí trước bạ' }, { t: 'Kê khai đăng ký xe' }, { t: 'Bấm biển tại Công an xã/phường' }, { t: 'Nhận cà vẹt & lên đường' }], sub: 'Chưa có biển số thì chưa được ra đường, dù em ấy đẹp cỡ nào.', dur: 5 },
   { bg: 'red', label: 'Quan trọng · Bộ sưu tập Smart MOVE', title: 'Mẫu xe mới tinh, hệ thống thuế chưa kịp có tên', tip: 'Bắt buộc khai thuế TRỰC TIẾP tại cơ quan thuế.', hi: ['TRỰC', 'TIẾP'], sub: 'Hãng nào ra mẫu mới cũng vậy. Hồ sơ của bạn hoàn toàn ổn.', art: 'tax', align: 'right', sfx: 'alert', dur: 4.6 },
-  { bg: 'black', step: 1, layout: 'cards', label: 'Bước 1 · Lệ phí trước bạ', title: 'Mang đủ 3 giấy tờ', itemStyle: 'num', items: [{ t: 'Giấy xuất xưởng', n: 'Tờ màu xanh' }, { t: 'Hóa đơn GTGT của xe', n: 'Chỉ của xe, không cần hóa đơn pin' }, { t: 'Hóa đơn đầu vào', n: 'Kèm CCCD của chủ xe' }], tip: 'Mẹo: kiểm tra đủ giấy tờ ngay lúc nhận xe.', dur: 5.8 },
+  { bg: 'black', step: 1, label: 'Bước 1 · Lệ phí trước bạ', title: 'Mang đủ 3 giấy tờ', itemStyle: 'num', items: [{ t: 'Giấy xuất xưởng', n: 'Tờ màu xanh' }, { t: 'Hóa đơn GTGT của xe', n: 'Chỉ của xe, không cần hóa đơn pin' }, { t: 'Hóa đơn đầu vào', n: 'Kèm CCCD của chủ xe' }], tip: 'Mẹo: kiểm tra đủ giấy tờ ngay lúc nhận xe.', dur: 5.8 },
   { bg: 'black', step: 1, label: 'Bước 1 · Sau khi nộp', title: 'Chờ 1–2 tuần', body: 'để thuế cập nhật tên mẫu xe mới. Tạm ngắm, chưa chạy nha.', itemStyle: 'timeline', items: [{ t: 'Nộp hồ sơ' }, { t: 'Chờ 1–2 tuần' }, { t: 'Khai online / trực tiếp & đóng lệ phí' }], tip: 'Giữ kỹ MÃ HỒ SƠ lệ phí trước bạ. Bước sau cần đến nó.', hi: ['MÃ', 'HỒ', 'SƠ'], sub: 'Lệ phí tùy khu vực và giá tính do cơ quan thuế xác định.', dur: 5.6 },
   { bg: 'white', step: 2, label: 'Bước 2', title: 'Kê khai đăng ký xe', body: 'Ghé cửa hàng để nhân viên hỗ trợ thao tác trước.', sub: 'Tránh ra thẳng công an rồi bị chỉ về lại cửa hàng.', art: 'store', dur: 3.8 },
   { bg: 'white', step: 3, label: 'Bước 3', title: 'Bấm biển', body: 'Mang xe + giấy tờ gốc đến Công an xã/phường.', sub: 'Cà số khung, số máy. Hồ sơ hợp lệ là bấm biển ngay. Lệ phí tùy khu vực.', art: 'plate', dur: 4.0 },
@@ -84,11 +84,30 @@ $('#pass').value = pass;
 $('#refreshProj').onclick = listProjects;
 $('#openProj').onclick = async () => {
   const id = $('#projList').value; if (!id) return;
-  try { const j = await api('get', { id }); Object.assign(state, j.project); state.scenes = (state.scenes || []).map(sanitize); $('#raw').value = state.raw || ''; $('#projName').value = state.name || ''; changed(); go(2); }
+  try { const j = await api('get', { id }); const imgs = j.project.images; delete j.project.images; Object.assign(state, j.project); await unpackImages(imgs); state.scenes = (state.scenes || []).map(sanitize); $('#raw').value = state.raw || ''; $('#projName').value = state.name || ''; changed(); go(2); }
   catch (e) { msg('#m1', e.message, true); }
 };
 const projName = () => (state.name || (state.scenes[0] && state.scenes[0].title) || 'clip').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').replace(/[^\w-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'clip';
-const projData = () => ({ name: state.name || '', raw: state.raw, target: state.target, aud: state.aud, scenes: state.scenes, savedAt: new Date().toISOString() });
+const projData = async () => ({ name: state.name || '', raw: state.raw, target: state.target, aud: state.aud, scenes: state.scenes, images: await packImages(), savedAt: new Date().toISOString() });
+
+// ---------------- photo backgrounds (IndexedDB, fallback memory)
+const memImgs = new Map();
+function idb() { return new Promise((res, rej) => { try { const q = indexedDB.open('move-clip-imgs', 1); q.onupgradeneeded = () => q.result.createObjectStore('img'); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); } catch (e) { rej(e); } }); }
+async function imgPut(id, blob) { memImgs.set(id, blob); try { const d = await idb(); await new Promise((res, rej) => { const tx = d.transaction('img', 'readwrite'); tx.objectStore('img').put(blob, id); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); } catch (e) {} }
+async function imgGet(id) { if (memImgs.has(id)) return memImgs.get(id); try { const d = await idb(); return await new Promise(res => { const q = d.transaction('img').objectStore('img').get(id); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); } catch (e) { return null; } }
+async function loadImg(id) { if (!id || E.hasImage(id)) return; const b = await imgGet(id); if (b) { const bm = await createImageBitmap(b); E.setImage(id, bm); } }
+async function loadAllImgs() { await Promise.all(state.scenes.map(s => loadImg(s.bgImg))); drawPreview(); }
+async function prepPhoto(file) {
+  const bm = await createImageBitmap(file), mx = 1600, sc = Math.min(1, mx / Math.max(bm.width, bm.height));
+  const cv = document.createElement('canvas'); cv.width = Math.round(bm.width * sc); cv.height = Math.round(bm.height * sc);
+  cv.getContext('2d').drawImage(bm, 0, 0, cv.width, cv.height);
+  const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.85));
+  const id = 'img_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  await imgPut(id, blob); E.setImage(id, await createImageBitmap(blob)); return id;
+}
+const blobToData = b => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(b); });
+async function packImages() { const out = {}; for (const s of state.scenes) if (s.bgImg && !out[s.bgImg]) { const b = await imgGet(s.bgImg); if (b) out[s.bgImg] = await blobToData(b); } return out; }
+async function unpackImages(images) { for (const [id, data] of Object.entries(images || {})) { const b = await (await fetch(data)).blob(); await imgPut(id, b); E.setImage(id, await createImageBitmap(b)); } }
 
 // ---------------- navigation
 function go(n, fromHash) {
@@ -177,6 +196,7 @@ function sanitize(s) {
     items: Array.isArray(s.items) ? s.items.slice(0, 5).map(i => ({ t: (i && (i.t || i.text)) || String(i || ''), n: (i && i.n) || '' })).filter(i => i.t) : [],
     itemStyle: pick(s.itemStyle, ['num', 'check', 'timeline', 'none'], 'num'), hi: Array.isArray(s.hi) ? s.hi.slice(0, 4) : [],
     layout: pick(s.layout, Object.keys(E.LAYOUT_NAMES), 'default'), art: pick(s.art, Object.keys(E.ART_NAMES), 'none'), align: s.align === 'right' ? 'right' : 'center',
+    bgImg: s.bgImg || '', bgDim: s.bgDim === undefined || s.bgDim === '' ? 0.55 : +s.bgDim, bgPos: ['top', 'center', 'bottom'].includes(s.bgPos) ? s.bgPos : 'center', kenburns: s.kenburns !== false,
     pattern: !!s.pattern, logoBig: !!s.logoBig, sfx: s.sfx === 'alert' ? 'alert' : 'whoosh', dur: +s.dur > 0 ? Math.min(9, Math.max(2.5, +s.dur)) : 0,
   };
 }
@@ -240,6 +260,7 @@ function renderChecks() {
   $$('#scenes .scene').forEach((el, i) => { const e = tl.scenes[i]; if (!e) return; el.querySelector('.d').textContent = e.dur.toFixed(1) + 's' + (+state.scenes[i].dur ? '' : ' (tự động)'); el.querySelector('.w').textContent = e.L.warn.length ? '⚠ ' + e.L.warn.length : ''; });
 }
 function renderSum3() { const c = checks(); const err = c.filter(x => x.level === 'error'); $('#sum3').innerHTML = `<div class="sum"><span class="pill ${err.length ? 'err' : 'ok'}">${err.length ? err.length + ' lỗi cần sửa' : 'Sẵn sàng export'}</span><span style="margin-left:auto;color:var(--neutral)">${state.scenes.length} cảnh · ${tl.total.toFixed(1)}s · 1080×1920</span></div>${err.length ? '<ul>' + err.map(x => `<li class="err">${esc(x.text)}</li>`).join('') + '</ul>' : '<div class="note">Bấm ▶ ở khung bên phải để xem clip.</div>'}`; }
+function alertMsg(t) { const m = document.getElementById('m2'); if (m) { m.textContent = t; m.className = 'msg err'; } }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ---------------- editor
@@ -265,6 +286,14 @@ function renderEditor() {
           <div><label class="f">Danh sách (mỗi dòng: nội dung | ghi chú)</label><textarea rows="4" data-k="items">${esc((s.items || []).map(it => it.t + (it.n ? ' | ' + it.n : '')).join('\n'))}</textarea></div>
           <div><label class="f">Kiểu danh sách</label><select data-k="itemStyle">${[['num', 'Đánh số'], ['check', 'Checklist'], ['timeline', 'Timeline'], ['none', 'Không ký hiệu']].map(([k, v]) => `<option value="${k}" ${s.itemStyle === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
             <label class="f">Nhấn mạnh (từ, cách nhau dấu phẩy)</label><input type="text" data-k="hi" value="${esc((s.hi || []).join(', '))}"></div>
+        </div>
+        <label class="f">Ảnh nền thật</label>
+        <div class="row" style="gap:8px">
+          <label class="btn ghost sm" style="cursor:pointer">${s.bgImg ? 'Đổi ảnh' : 'Tải ảnh lên'}<input type="file" accept="image/*" data-photo style="display:none"></label>
+          ${s.bgImg ? `<button class="btn ghost sm" data-a="noimg">Bỏ ảnh</button>
+          <span style="font-size:12px;color:var(--neutral)">Độ phủ màu</span><input type="range" min="0.2" max="0.9" step="0.05" data-k="bgDim" value="${s.bgDim ?? 0.55}" style="width:120px;accent-color:var(--red)">
+          <select data-k="bgPos" style="width:auto"><option value="top" ${s.bgPos === 'top' ? 'selected' : ''}>Canh trên</option><option value="center" ${s.bgPos !== 'top' && s.bgPos !== 'bottom' ? 'selected' : ''}>Canh giữa</option><option value="bottom" ${s.bgPos === 'bottom' ? 'selected' : ''}>Canh dưới</option></select>
+          <label style="font-size:12px"><input type="checkbox" data-k="kenburns" ${s.kenburns !== false ? 'checked' : ''}> Zoom chậm</label>` : '<span class="note">JPG/PNG, ảnh dọc cho đẹp nhất. Màu nền của cảnh sẽ phủ lên ảnh để chữ dễ đọc.</span>'}
         </div>
         <label class="f">Hộp nhấn / mẹo</label><input type="text" data-k="tip" value="${esc(s.tip || '')}">
         <label class="f">Chú thích phụ</label><input type="text" data-k="sub" value="${esc(s.sub || '')}">
@@ -301,6 +330,9 @@ function renderEditor() {
       };
       inp.addEventListener(inp.tagName === 'SELECT' || inp.type === 'checkbox' ? 'change' : 'input', fn);
     });
+    const ni = d.querySelector('[data-a=noimg]'); if (ni) ni.onclick = () => { s.bgImg = ''; changed(); renderEditor(); seekScene(i); };
+    const ph = d.querySelector('[data-photo]');
+    if (ph) ph.onchange = async () => { const f = ph.files[0]; if (!f) return; try { s.bgImg = await prepPhoto(f); if (s.bg === 'white') s.bg = 'black'; changed(); renderEditor(); seekScene(i); } catch (err) { alertMsg('Không đọc được ảnh: ' + err.message); } };
     box.appendChild(d);
   });
   renderChecks();
@@ -392,7 +424,7 @@ async function saveDrive() {
   const b = $('#driveBtn'); b.disabled = true; $('#m4d').textContent = 'Đang tải lên Google Drive…';
   try {
     const base64 = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result.split(',')[1]); fr.onerror = rej; fr.readAsDataURL(lastBlob); });
-    const j = await api('save', { name: projName(), fileName: lastName, mimeType: lastBlob.type, base64, project: projData() });
+    const j = await api('save', { name: projName(), fileName: lastName, mimeType: lastBlob.type, base64, project: await projData() });
     $('#m4d').innerHTML = `Đã lưu lên Drive: <a href="${j.fileUrl}" target="_blank" rel="noopener">video</a> · <a href="${j.folderUrl}" target="_blank" rel="noopener">thư mục</a>`; listProjects();
   } catch (e) { $('#m4d').innerHTML = `<span style="color:var(--red)">Lưu Drive lỗi: ${esc(e.message)}</span>`; }
   finally { b.disabled = false; }
@@ -400,7 +432,7 @@ async function saveDrive() {
 $('#driveBtn').onclick = saveDrive;
 $('#saveProj').onclick = async () => {
   $('#m2').textContent = 'Đang lưu dự án…';
-  try { const j = await api('saveProject', { name: projName(), project: projData() }); $('#m2').innerHTML = `Đã lưu dự án: <a href="${j.url}" target="_blank" rel="noopener">${esc(projName())}.json</a>`; listProjects(); }
+  try { const j = await api('saveProject', { name: projName(), project: await projData() }); $('#m2').innerHTML = `Đã lưu dự án: <a href="${j.url}" target="_blank" rel="noopener">${esc(projName())}.json</a>`; listProjects(); }
   catch (e) { msg('#m2', e.message, true); }
 };
 
@@ -459,7 +491,7 @@ async function recordRealtime(f, w, h, fps, br, audio, prog) {
 
 // ---------------- boot
 if (!state.scenes.length) { state.scenes = JSON.parse(JSON.stringify(SAMPLE_SCENES)); state.raw = state.raw || ''; }
-changed(); seekScene(0);
+changed(); seekScene(0); loadAllImgs();
 $('#projName').value = state.name || ''; $('#projName').oninput = () => { state.name = $('#projName').value; save(); };
 $('#aiParse').style.display = 'none'; setDriveUI(); connect(true);
 if (state.raw) $('#raw').value = state.raw;
