@@ -63,6 +63,9 @@ function setDriveUI() {
   $('#driveSt').innerHTML = backend.auth ? `Đã kết nối · <a href="${backend.folderUrl}" target="_blank" rel="noopener">Mở thư mục Drive</a>` : (API ? 'Chưa kết nối' : '');
   $('#projRow').style.display = backend.auth ? '' : 'none';
   $('#aiParse').style.display = backend.ai ? '' : 'none';
+  const dw = $('#driveWarn');
+  if (!backend.auth) { dw.style.display = ''; dw.textContent = !API ? 'Chưa kết nối Google Drive (backend chưa được cấu hình) — clip chỉ tải về máy, chưa tự lưu lên Drive.' : 'Chưa kết nối Google Drive — nhập mã team ở bước 1 để clip tự lưu lên Drive.'; }
+  else dw.style.display = 'none';
 }
 async function connect(silent) {
   if (!API) return;
@@ -456,6 +459,6 @@ async function recordRealtime(f, w, h, fps, br, audio, prog) {
 if (!state.scenes.length) { state.scenes = JSON.parse(JSON.stringify(SAMPLE_SCENES)); state.raw = state.raw || ''; }
 changed(); seekScene(0);
 $('#projName').value = state.name || ''; $('#projName').oninput = () => { state.name = $('#projName').value; save(); };
-$('#aiParse').style.display = 'none'; connect(true);
+$('#aiParse').style.display = 'none'; setDriveUI(); connect(true);
 if (state.raw) $('#raw').value = state.raw;
 })();
