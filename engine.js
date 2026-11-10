@@ -16,7 +16,7 @@ const TH = {
 };
 const LAYOUT_NAMES = { default: 'Chuẩn (trên xuống)', center: 'Câu chốt giữa màn hình', bignum: 'Số lớn / con số', quote: 'Trích dẫn', compare: 'So sánh 2 cột', cards: 'Thẻ 2×2', artTop: 'Hình trên, chữ dưới' };
 const BG_NAMES = { red: 'Đỏ MOVE', black: 'Đen', white: 'Trắng', grad: 'Gradient Đen → Đỏ' };
-const ART_NAMES = { none: 'Không', scooter: 'Xe điện', bikeBig: 'Xe ga bánh lớn (ảnh 1)', bikeTarget: 'MOVE Target', bikeDinking: 'MOVE DinKing', tax: 'Cơ quan thuế', store: 'Cửa hàng', plate: 'Biển số', phone: 'Điện thoại + thư', docs: 'Giấy tờ', helmet: 'Mũ bảo hiểm', clock: 'Đồng hồ chờ', charger: 'Trụ sạc', battery: 'Pin', plug: 'Ổ cắm / sạc tại nhà', bolt: 'Tia điện', route: 'Quãng đường (km)', gauge: 'Đồng hồ tốc độ', shield: 'Bảo hành', service: 'Bảo dưỡng', app: 'App / khóa thông minh', gift: 'Quà tặng / khuyến mãi', calendar: 'Lịch hẹn', photo: '📷 Ảnh tải lên', price: 'Giá / ưu đãi', key: 'Chìa khóa thông minh', swap: 'Thu xăng đổi điện' };
+const ART_NAMES = { none: 'Không', scooter: 'Xe điện', bikeBig: 'MOVE Boss', bikeTarget: 'MOVE Target', bikeDinking: 'MOVE Thinking', tax: 'Cơ quan thuế', store: 'Cửa hàng', plate: 'Biển số', phone: 'Điện thoại + thư', docs: 'Giấy tờ', helmet: 'Mũ bảo hiểm', clock: 'Đồng hồ chờ', charger: 'Trụ sạc', battery: 'Pin', plug: 'Ổ cắm / sạc tại nhà', bolt: 'Tia điện', route: 'Quãng đường (km)', gauge: 'Đồng hồ tốc độ', shield: 'Bảo hành', service: 'Bảo dưỡng', app: 'App / khóa thông minh', gift: 'Quà tặng / khuyến mãi', calendar: 'Lịch hẹn', photo: '📷 Ảnh tải lên', price: 'Giá / ưu đãi', key: 'Chìa khóa thông minh', swap: 'Thu xăng đổi điện' };
 const WIPE = 0.38;
 
 // ---------- assets
@@ -159,7 +159,7 @@ const ART = {
     ln(c, [[180, 190], [180, 110]], ring, 12); ln(c, [[180, 190], [240, 220]], C.PURPLE, 10); el(c, 180, 190, 12, 12, C.PURPLE);
     rr(c, 150, 10, 210, 36, 8, ring);
   } },
-  // ---- MOVE models (flat, facing right, no centre stand)
+  // ---- MOVE models (flat, facing right, no centre stand): bikeBig = Boss, bikeTarget = Target, bikeDinking = Thinking
   bikeBig: { w: 720, h: 380, draw(c, th) {
     const K = th === TH.black || th === TH.grad ? '#323D3F' : C.BLACK;
     const body = th === TH.white ? '#E6E6E6' : C.WHITE, chrome = mix(C.NEUTRAL, C.WHITE, .45), shade = th === TH.white ? '#CFCFCF' : mix(C.WHITE, C.RED, .82);

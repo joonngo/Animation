@@ -31,7 +31,8 @@ function itemOf(t) {
 }
 function artFor(txt) {
   const s = txt.toLowerCase();
-  if (/dinking|din king/.test(s)) return 'bikeDinking';
+  if (/thinking|think king|dinking/.test(s)) return 'bikeDinking';
+  if (/\bboss\b/.test(s)) return 'bikeBig';
   if (/target/.test(s)) return 'bikeTarget';
   if (/mũ bảo hiểm|nón bảo hiểm/.test(s)) return 'helmet';
   if (/thu xăng|đổi điện|xe xăng|lên đời/.test(s)) return 'swap';
