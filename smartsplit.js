@@ -32,6 +32,18 @@ function itemOf(t) {
 function artFor(txt) {
   const s = txt.toLowerCase();
   if (/mũ bảo hiểm|nón bảo hiểm/.test(s)) return 'helmet';
+  if (/thu xăng|đổi điện|xe xăng|lên đời/.test(s)) return 'swap';
+  if (/trạm sạc|trụ sạc|sạc nhanh/.test(s)) return 'charger';
+  if (/ổ cắm|sạc tại nhà|cắm sạc/.test(s)) return 'plug';
+  if (/\bpin\b|dung lượng|kwh/.test(s)) return 'battery';
+  if (/bảo hành/.test(s)) return 'shield';
+  if (/bảo dưỡng|sửa chữa|kỹ thuật|thay thế/.test(s)) return 'service';
+  if (/khuyến mãi|quà|tặng|trúng/.test(s)) return 'gift';
+  if (/giá|ưu đãi|giảm|trả góp|%/.test(s)) return 'price';
+  if (/chìa khóa|smartkey|khóa thông minh/.test(s)) return 'key';
+  if (/km\/h|tốc độ|công suất/.test(s)) return 'gauge';
+  if (/\d+\s*km|quãng đường|di chuyển/.test(s)) return 'route';
+  if (/lịch|đặt hẹn|ngày \d/.test(s)) return 'calendar';
   if (/\d+\s*[-–]?\s*\d*\s*(tuần|ngày)/.test(s)) return 'clock';
   if (/cà vẹt|bưu điện|điện thoại|online|ứng dụng/.test(s)) return 'phone';
   if (/bấm biển|biển số/.test(s)) return 'plate';
@@ -39,6 +51,8 @@ function artFor(txt) {
   if (/thuế|lệ phí|trước bạ/.test(s)) return 'tax';
   if (/chờ|tuần|ngày làm việc|hẹn/.test(s)) return 'clock';
   if (/giấy tờ|hóa đơn|hồ sơ|căn cước/.test(s)) return 'docs';
+  if (/app|ứng dụng/.test(s)) return 'app';
+  if (/điện|năng lượng/.test(s)) return 'bolt';
   return 'none';
 }
 const ALERT = /(quan trọng|lưu ý|bắt buộc|khoan đã|cảnh báo|không được|chưa được)/i;
@@ -68,7 +82,7 @@ function smartSplit(raw, target = 40) {
       const extra = b.items.slice(0, 4).map(l => sentences(l.replace(/^\s*\d+[.)]\s*/, '')).slice(1).join(' ')).filter(x => ALERT.test(x))[0];
       const isSteps = m && /bước/i.test(m[2]);
       const title = m ? (isSteps ? `${m[1]} bước để hoàn tất` : `Mang đủ ${m[1]} ${m[2]}`) : (titleSrc ? fit(sentences(titleSrc).pop(), 45) : 'Ghi nhớ');
-      scenes.push({ bg: isSteps ? 'grad' : 'black', label: isSteps ? 'Tổng quan' : '', title, items, itemStyle: 'num', sub: extra ? fit(extra, 90) : '', art: 'none', _kind: 'list' });
+      scenes.push({ layout: !isSteps && items.length >= 2 && items.length <= 4 ? 'cards' : 'default', bg: isSteps ? 'grad' : 'black', label: isSteps ? 'Tổng quan' : '', title, items, itemStyle: 'num', sub: extra ? fit(extra, 90) : '', art: 'none', _kind: 'list' });
       return;
     }
     const ss = sentences(b.text); if (!ss.length) return;
@@ -130,6 +144,11 @@ function smartSplit(raw, target = 40) {
   while (out.length > (target >= 38 ? 11 : 9)) { const pick = f => out.findIndex((s, k) => k > 0 && k < out.length - 1 && !s.items.length && !s.step && f(s)); let i = pick(s => !s.tip && s.bg !== 'red'); if (i < 0) i = pick(s => s.bg !== 'red'); if (i < 0) break; out.splice(i, 1); }
   // highlight words in tips: uppercase words or key phrases
   out.forEach(s => {
+    if (!s.layout || s.layout === 'default') {
+      const m = s.title.match(/(\d[\d.,]*\s*[-–]?\s*\d*\s*(?:tuần|ngày|km\/h|km|giờ|phút|%|triệu|nghìn|năm|kwh))/i);
+      if (m && !s.items.length && !s.step) { s.layout = 'bignum'; if (s.body && !s.sub) s.sub = s.body; s.body = s.title; s.title = m[1].replace(/\s*[-–]\s*/, '–'); s.art = 'none'; }
+      else if (!s.body && !s.items.length && !s.tip && !s.step && !s.logoBig && s !== out[0]) s.layout = 'center';
+    }
     if (s.sub && s.items.some(it => it.n && (s.sub.includes(it.n) || it.n.includes(s.sub)))) s.items.forEach(it => { if (s.sub.includes(it.n) || it.n.includes(s.sub)) it.n = ''; });
     if (s.body && s.title && (s.body.includes(s.title) || s.title.includes(s.body))) s.body = '';
     const src = [s.title, s.tip].join(' ');

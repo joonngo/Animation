@@ -32,7 +32,7 @@ const SAMPLE_SCENES = [
   { bg: 'red', title: 'Rước em xe điện mới về nhà rồi?', body: 'Chưa có biển số thì em ấy mới chỉ là đồ trang trí phòng khách thôi.', art: 'scooter', pattern: true, dur: 3.4 },
   { bg: 'grad', label: 'Làm giấy tờ xe điện', title: '4 bước để lăn bánh', itemStyle: 'num', items: [{ t: 'Đóng lệ phí trước bạ' }, { t: 'Kê khai đăng ký xe' }, { t: 'Bấm biển tại Công an xã/phường' }, { t: 'Nhận cà vẹt & lên đường' }], sub: 'Chưa có biển số thì chưa được ra đường, dù em ấy đẹp cỡ nào.', dur: 5 },
   { bg: 'red', label: 'Quan trọng · Bộ sưu tập Smart MOVE', title: 'Mẫu xe mới tinh, hệ thống thuế chưa kịp có tên', tip: 'Bắt buộc khai thuế TRỰC TIẾP tại cơ quan thuế.', hi: ['TRỰC', 'TIẾP'], sub: 'Hãng nào ra mẫu mới cũng vậy. Hồ sơ của bạn hoàn toàn ổn.', art: 'tax', align: 'right', sfx: 'alert', dur: 4.6 },
-  { bg: 'black', step: 1, label: 'Bước 1 · Lệ phí trước bạ', title: 'Mang đủ 3 giấy tờ', itemStyle: 'num', items: [{ t: 'Giấy xuất xưởng', n: 'Tờ màu xanh' }, { t: 'Hóa đơn GTGT của xe', n: 'Chỉ của xe, không cần hóa đơn pin' }, { t: 'Hóa đơn đầu vào', n: 'Kèm CCCD của chủ xe' }], tip: 'Mẹo: kiểm tra đủ giấy tờ ngay lúc nhận xe.', dur: 5.8 },
+  { bg: 'black', step: 1, layout: 'cards', label: 'Bước 1 · Lệ phí trước bạ', title: 'Mang đủ 3 giấy tờ', itemStyle: 'num', items: [{ t: 'Giấy xuất xưởng', n: 'Tờ màu xanh' }, { t: 'Hóa đơn GTGT của xe', n: 'Chỉ của xe, không cần hóa đơn pin' }, { t: 'Hóa đơn đầu vào', n: 'Kèm CCCD của chủ xe' }], tip: 'Mẹo: kiểm tra đủ giấy tờ ngay lúc nhận xe.', dur: 5.8 },
   { bg: 'black', step: 1, label: 'Bước 1 · Sau khi nộp', title: 'Chờ 1–2 tuần', body: 'để thuế cập nhật tên mẫu xe mới. Tạm ngắm, chưa chạy nha.', itemStyle: 'timeline', items: [{ t: 'Nộp hồ sơ' }, { t: 'Chờ 1–2 tuần' }, { t: 'Khai online / trực tiếp & đóng lệ phí' }], tip: 'Giữ kỹ MÃ HỒ SƠ lệ phí trước bạ. Bước sau cần đến nó.', hi: ['MÃ', 'HỒ', 'SƠ'], sub: 'Lệ phí tùy khu vực và giá tính do cơ quan thuế xác định.', dur: 5.6 },
   { bg: 'white', step: 2, label: 'Bước 2', title: 'Kê khai đăng ký xe', body: 'Ghé cửa hàng để nhân viên hỗ trợ thao tác trước.', sub: 'Tránh ra thẳng công an rồi bị chỉ về lại cửa hàng.', art: 'store', dur: 3.8 },
   { bg: 'white', step: 3, label: 'Bước 3', title: 'Bấm biển', body: 'Mang xe + giấy tờ gốc đến Công an xã/phường.', sub: 'Cà số khung, số máy. Hồ sơ hợp lệ là bấm biển ngay. Lệ phí tùy khu vực.', art: 'plate', dur: 4.0 },
@@ -144,7 +144,8 @@ Scene = {
  "tip": câu nhấn mạnh/mẹo ≤ 80 ký tự hoặc "",
  "sub": chú thích phụ ≤ 90 ký tự hoặc "",
  "hi": tối đa 3 từ đơn cần nhấn mạnh, phải xuất hiện nguyên văn trong title/body/tip,
- "art": "none"|"scooter"|"tax"|"store"|"plate"|"phone"|"docs"|"helmet"|"clock",
+ "layout": "default"|"center"|"bignum"|"quote"|"compare"|"cards"|"artTop" (center: 1 câu chốt; bignum: title là con số/ngắn như "1–2 tuần", "120 km"; compare: items[0] là tiêu đề 2 cột {"t":"Xe xăng","n":"Xe điện"}, các item sau {"t":vế trái,"n":vế phải}; cards: 2–4 items dạng thẻ; artTop: hình to ở trên),
+ "art": "none"|"scooter"|"tax"|"store"|"plate"|"phone"|"docs"|"helmet"|"clock"|"charger"|"battery"|"plug"|"bolt"|"route"|"gauge"|"shield"|"service"|"app"|"gift"|"calendar"|"price"|"key"|"swap",
  "align": "center"|"right",
  "pattern": true|false,
  "logoBig": true|false,
@@ -157,7 +158,7 @@ Quy tắc brand MOVE 2026:
 - Cảnh 1: bg "red", hook mạnh, có thể art "scooter" + pattern true.
 - Cảnh cuối: CTA, bg "grad", logoBig true, pattern true, art "none".
 - Pattern chỉ ở cảnh mở và cảnh kết. Cảnh cảnh báo dùng bg "red" + sfx "alert".
-- Cảnh có ≥ 3 items hoặc có cả tip và sub thì art "none". Mỗi cảnh một ý.
+- Cảnh có ≥ 3 items hoặc có cả tip và sub thì art "none" (trừ layout cards/compare luôn art "none"). Mỗi cảnh một ý. Đa dạng bố cục: dùng bignum cho con số nổi bật, center cho câu chốt, cards cho 3–4 giấy tờ/lợi ích, compare khi so sánh 2 thứ.
 - Không thêm thông tin không có trong content, giữ đúng số liệu, giọng thân thiện như content gốc.
 - 6–11 cảnh.
 
@@ -175,7 +176,7 @@ function sanitize(s) {
     label: s.label || '', title: s.title || '', body: s.body || '', sub: s.sub || '', tip: s.tip || '',
     items: Array.isArray(s.items) ? s.items.slice(0, 5).map(i => ({ t: (i && (i.t || i.text)) || String(i || ''), n: (i && i.n) || '' })).filter(i => i.t) : [],
     itemStyle: pick(s.itemStyle, ['num', 'check', 'timeline', 'none'], 'num'), hi: Array.isArray(s.hi) ? s.hi.slice(0, 4) : [],
-    art: pick(s.art, Object.keys(E.ART_NAMES), 'none'), align: s.align === 'right' ? 'right' : 'center',
+    layout: pick(s.layout, Object.keys(E.LAYOUT_NAMES), 'default'), art: pick(s.art, Object.keys(E.ART_NAMES), 'none'), align: s.align === 'right' ? 'right' : 'center',
     pattern: !!s.pattern, logoBig: !!s.logoBig, sfx: s.sfx === 'alert' ? 'alert' : 'whoosh', dur: +s.dur > 0 ? Math.min(9, Math.max(2.5, +s.dur)) : 0,
   };
 }
@@ -250,9 +251,10 @@ function renderEditor() {
     d.innerHTML = `<div class="hd"><span class="sw" style="background:${bgSw[s.bg]}"></span><span class="t">${i + 1}. ${esc(s.title || '(chưa có tiêu đề)')}</span><span class="w"></span><span class="d"></span>
       <button class="btn ghost sm" data-a="up">↑</button><button class="btn ghost sm" data-a="down">↓</button><button class="btn ghost sm" data-a="dup">⧉</button><button class="btn ghost sm" data-a="del">✕</button></div>
       <div class="bd">
-        <div class="grid4">
+        <div class="grid4" style="grid-template-columns:repeat(5,1fr)">
           <div><label class="f">Nền</label><select data-k="bg">${Object.entries(E.BG_NAMES).map(([k, v]) => `<option value="${k}" ${s.bg === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
           <div><label class="f">Bước</label><select data-k="step"><option value="">—</option>${[1, 2, 3, 4].map(n => `<option ${+s.step === n ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+          <div><label class="f">Bố cục</label><select data-k="layout">${Object.entries(E.LAYOUT_NAMES).map(([k, v]) => `<option value="${k}" ${(s.layout || 'default') === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
           <div><label class="f">Hình flat</label><select data-k="art">${Object.entries(E.ART_NAMES).map(([k, v]) => `<option value="${k}" ${s.art === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
           <div><label class="f">Thời lượng (s)</label><input type="number" step="0.1" min="2" max="9" data-k="dur" value="${+s.dur || ''}" placeholder="tự động"></div>
         </div>

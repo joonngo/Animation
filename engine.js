@@ -9,20 +9,21 @@ const C = {
 function hex(c) { const n = parseInt(c.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 function mix(a, b, k) { const A = hex(a), B = hex(b); return '#' + A.map((v, i) => Math.round(v * k + B[i] * (1 - k)).toString(16).padStart(2, '0')).join(''); }
 const TH = {
-  red:   { fg: C.WHITE, sub: mix(C.WHITE, C.RED, .82), acc: C.WHITE, hi: { box: C.BLACK }, motif: C.WHITE, logo: C.WHITE, off: mix(C.WHITE, C.RED, .35), num: C.WHITE, tipBg: C.BLACK, tipFg: C.WHITE, tipHi: C.PURPLE, check: C.WHITE, checkFg: C.RED },
-  black: { fg: C.WHITE, sub: mix(C.WHITE, C.BLACK, .72), acc: C.RED, hi: { color: C.PURPLE }, motif: C.RED, logo: C.WHITE, off: mix(C.WHITE, C.BLACK, .25), num: C.RED, tipBg: C.PURPLE, tipFg: C.WHITE, tipHi: C.BLACK, check: C.RED, checkFg: C.WHITE },
-  white: { fg: C.BLACK, sub: C.NEUTRAL, acc: C.RED, hi: { color: C.RED }, motif: C.RED, logo: C.BLACK, off: '#D7D7D7', num: C.RED, tipBg: C.BLACK, tipFg: C.WHITE, tipHi: C.PURPLE, check: C.RED, checkFg: C.WHITE },
-  grad:  { fg: C.WHITE, sub: mix(C.WHITE, C.BLACK, .78), acc: C.WHITE, hi: { color: C.PURPLE }, motif: C.WHITE, logo: C.WHITE, off: mix(C.WHITE, C.BLACK, .3), num: C.WHITE, tipBg: C.PURPLE, tipFg: C.WHITE, tipHi: C.BLACK, check: C.WHITE, checkFg: C.RED },
+  red:   { fg: C.WHITE, sub: mix(C.WHITE, C.RED, .82), acc: C.WHITE, hi: { box: C.BLACK }, motif: C.WHITE, logo: C.WHITE, off: mix(C.WHITE, C.RED, .35), big: C.WHITE, card: 'rgba(255,255,255,0.14)', num: C.WHITE, tipBg: C.BLACK, tipFg: C.WHITE, tipHi: C.PURPLE, check: C.WHITE, checkFg: C.RED },
+  black: { fg: C.WHITE, sub: mix(C.WHITE, C.BLACK, .72), acc: C.RED, hi: { color: C.PURPLE }, motif: C.RED, logo: C.WHITE, off: mix(C.WHITE, C.BLACK, .25), big: C.RED, card: 'rgba(255,255,255,0.07)', num: C.RED, tipBg: C.PURPLE, tipFg: C.WHITE, tipHi: C.BLACK, check: C.RED, checkFg: C.WHITE },
+  white: { fg: C.BLACK, sub: C.NEUTRAL, acc: C.RED, hi: { color: C.RED }, motif: C.RED, logo: C.BLACK, off: '#D7D7D7', big: C.RED, card: C.NL, num: C.RED, tipBg: C.BLACK, tipFg: C.WHITE, tipHi: C.PURPLE, check: C.RED, checkFg: C.WHITE },
+  grad:  { fg: C.WHITE, sub: mix(C.WHITE, C.BLACK, .78), acc: C.WHITE, hi: { color: C.PURPLE }, motif: C.WHITE, logo: C.WHITE, off: mix(C.WHITE, C.BLACK, .3), big: C.WHITE, card: 'rgba(255,255,255,0.09)', num: C.WHITE, tipBg: C.PURPLE, tipFg: C.WHITE, tipHi: C.BLACK, check: C.WHITE, checkFg: C.RED },
 };
+const LAYOUT_NAMES = { default: 'Chuẩn (trên xuống)', center: 'Câu chốt giữa màn hình', bignum: 'Số lớn / con số', quote: 'Trích dẫn', compare: 'So sánh 2 cột', cards: 'Thẻ 2×2', artTop: 'Hình trên, chữ dưới' };
 const BG_NAMES = { red: 'Đỏ MOVE', black: 'Đen', white: 'Trắng', grad: 'Gradient Đen → Đỏ' };
-const ART_NAMES = { none: 'Không', scooter: 'Xe điện', tax: 'Cơ quan thuế', store: 'Cửa hàng', plate: 'Biển số', phone: 'Điện thoại + thư', docs: 'Giấy tờ', helmet: 'Mũ bảo hiểm', clock: 'Đồng hồ chờ' };
+const ART_NAMES = { none: 'Không', scooter: 'Xe điện', tax: 'Cơ quan thuế', store: 'Cửa hàng', plate: 'Biển số', phone: 'Điện thoại + thư', docs: 'Giấy tờ', helmet: 'Mũ bảo hiểm', clock: 'Đồng hồ chờ', charger: 'Trụ sạc', battery: 'Pin', plug: 'Ổ cắm / sạc tại nhà', bolt: 'Tia điện', route: 'Quãng đường (km)', gauge: 'Đồng hồ tốc độ', shield: 'Bảo hành', service: 'Bảo dưỡng', app: 'App / khóa thông minh', gift: 'Quà tặng / khuyến mãi', calendar: 'Lịch hẹn', price: 'Giá / ưu đãi', key: 'Chìa khóa thông minh', swap: 'Thu xăng đổi điện' };
 const WIPE = 0.38;
 
 // ---------- assets
 const A = {};
 function loadImg(src) { return new Promise((r, j) => { const i = new Image(); i.onload = () => r(i); i.onerror = j; i.src = src; }); }
 async function loadAssets() {
-  const want = ['500', '600', '700', '900'].map(w => `${w} 40px "Mona Sans"`).concat(['400 40px "Josefin Sans"', '600 40px "Josefin Sans"']);
+  const want = ['500', '600', '700', '800', '900'].map(w => `${w} 40px "Mona Sans"`).concat(['400 40px "Josefin Sans"', '600 40px "Josefin Sans"']);
   let res = null;
   try { res = await Promise.race([Promise.all(want.map(f => document.fonts.load(f, 'Đường ặ'))), new Promise(r => setTimeout(() => r(null), 8000))]); } catch (e) {}
   A.fontsOK = !!res && res.every(x => x && x.length);
@@ -65,13 +66,13 @@ function textBlock(ctx, text, font, color, maxW, lh = 1.24, hi = [], hiStyle = n
   const height = lhpx * (lines.length - 1) + Math.round(size * 1.2);
   const norm = s => s.replace(/[.,!?:;"“”()]/g, '');
   const hiSet = new Set((hi || []).map(norm).filter(Boolean));
-  ctx.font = font; const width = Math.max(...lines.map(ws => ctx.measureText(ws.join(' ')).width));
+  ctx.font = font; const lw = lines.map(ws => ctx.measureText(ws.join(' ')).width), width = Math.max(...lw);
   return {
     height, width, lines: lines.length,
-    draw(c, x, y) {
+    draw(c, x, y, align, boxW) {
       c.font = font; c.textBaseline = 'top'; const sp = c.measureText(' ').width;
       lines.forEach((ws, i) => {
-        let cx = x; const ly = y + i * lhpx;
+        let cx = align === 'center' ? x + (boxW - lw[i]) / 2 : x; const ly = y + i * lhpx;
         ws.forEach(w => {
           const ww = c.measureText(w).width, isHi = hiSet.has(norm(w)) && hiStyle;
           if (isHi && hiStyle.box) { c.fillStyle = hiStyle.box; c.fillRect(cx - 8, ly - size * 0.08, ww + 16, size * 1.22); c.fillStyle = C.WHITE; }
@@ -92,6 +93,7 @@ function ctext(c, x, y, s, font, color) { c.font = font; c.textAlign = 'center';
 function drawLogo(c, x, y, w, color, alpha = 1) { const img = tinted(A.logo, color); const h = w * img.height / img.width; c.globalAlpha *= alpha; c.drawImage(img, x, y, w, h); c.globalAlpha /= alpha || 1; return h; }
 
 // ---------- flat illustrations (palette only). Each: {w,h,draw(c, theme)}
+const bgOf = th => th === TH.red ? C.RED : th === TH.white ? C.WHITE : C.BLACK;
 const ART = {
   scooter: { w: 720, h: 380, draw(c) {
     for (const x of [150, 560]) { el(c, x, 300, 74, 74, C.BLACK); el(c, x, 300, 40, 40, C.NEUTRAL); el(c, x, 300, 14, 14, C.WHITE); }
@@ -156,6 +158,108 @@ const ART = {
     ln(c, [[180, 190], [180, 110]], ring, 12); ln(c, [[180, 190], [240, 220]], C.PURPLE, 10); el(c, 180, 190, 12, 12, C.PURPLE);
     rr(c, 150, 10, 210, 36, 8, ring);
   } },
+  // ---- EV industry set
+  charger: { w: 420, h: 400, draw(c, th) {
+    const body = th === TH.white ? C.BLACK : C.WHITE, scr = th === TH.red ? C.BLACK : C.RED;
+    rr(c, 60, 20, 250, 380, 26, body); rr(c, 90, 60, 220, 170, 14, scr);
+    poly(c, [[165, 78], [130, 125], [158, 125], [145, 155], [185, 105], [157, 105]], C.WHITE);
+    rr(c, 90, 200, 220, 216, 8, mix(C.NEUTRAL, C.WHITE, .5)); rr(c, 90, 230, 180, 246, 8, mix(C.NEUTRAL, C.WHITE, .5));
+    rr(c, 40, 370, 270, 392, 8, mix(C.NEUTRAL, C.WHITE, .4));
+    c.beginPath(); c.moveTo(250, 120); c.bezierCurveTo(340, 120, 330, 300, 380, 300); c.strokeStyle = C.PURPLE; c.lineWidth = 14; c.lineCap = 'round'; c.stroke();
+    rr(c, 352, 286, 410, 330, 12, C.PURPLE); rr(c, 398, 296, 418, 304, 3, body); rr(c, 398, 312, 418, 320, 3, body);
+  } },
+  battery: { w: 480, h: 280, draw(c, th) {
+    const ink = th === TH.white ? C.BLACK : C.WHITE;
+    rr(c, 20, 30, 420, 250, 30, null, ink, 16); rr(c, 430, 100, 466, 180, 10, ink);
+    const fill = th === TH.red ? C.WHITE : C.RED;
+    for (let i = 0; i < 4; i++) rr(c, 52 + i * 92, 62, 132 + i * 92, 218, 12, i < 3 ? fill : mix(ink, th === TH.white ? C.WHITE : C.BLACK, .25));
+    el(c, 400, 50, 46, 46, C.PURPLE); poly(c, [[404, 18], [378, 56], [398, 56], [390, 84], [422, 44], [402, 44]], C.WHITE);
+  } },
+  plug: { w: 420, h: 360, draw(c, th) {
+    const ink = th === TH.white ? C.BLACK : C.WHITE;
+    rr(c, 40, 40, 220, 300, 30, ink); el(c, 105, 140, 18, 30, bgOf(th)); el(c, 160, 140, 18, 30, bgOf(th));
+    el(c, 132, 225, 16, 16, bgOf(th));
+    rr(c, 270, 110, 380, 200, 22, th === TH.red ? C.BLACK : C.PURPLE); rr(c, 300, 70, 314, 112, 6, ink); rr(c, 336, 70, 350, 112, 6, ink);
+    c.beginPath(); c.moveTo(325, 200); c.bezierCurveTo(325, 320, 200, 340, 140, 320); c.strokeStyle = ink; c.lineWidth = 12; c.lineCap = 'round'; c.stroke();
+  } },
+  bolt: { w: 320, h: 380, draw(c, th) {
+    el(c, 160, 190, 150, 150, th === TH.red ? C.WHITE : C.RED);
+    poly(c, [[180, 70], [100, 210], [160, 210], [140, 310], [225, 165], [165, 165]], th === TH.red ? C.RED : C.WHITE);
+  } },
+  route: { w: 560, h: 360, draw(c, th) {
+    const ink = th === TH.white ? C.BLACK : C.WHITE;
+    c.setLineDash([2, 26]); ln(c, [[60, 300], [180, 220], [300, 270], [420, 140]], ink, 14); c.setLineDash([]);
+    el(c, 60, 300, 22, 22, ink);
+    c.beginPath(); c.moveTo(440, 175); c.bezierCurveTo(380, 110, 380, 40, 440, 30); c.bezierCurveTo(500, 40, 500, 110, 440, 175); c.fillStyle = th === TH.red ? C.BLACK : C.RED; c.fill();
+    el(c, 440, 85, 22, 22, C.WHITE);
+    rr(c, 150, 300, 380, 352, 26, th === TH.red ? C.BLACK : C.PURPLE); ctext(c, 265, 327, 'km', '800 30px "Mona Sans"', C.WHITE);
+  } },
+  gauge: { w: 460, h: 320, draw(c, th) {
+    const ink = th === TH.white ? C.BLACK : C.WHITE, acc = th === TH.red ? C.BLACK : C.RED;
+    c.lineCap = 'round';
+    c.beginPath(); c.arc(230, 260, 190, Math.PI, 2 * Math.PI); c.strokeStyle = mix(ink, th === TH.white ? C.WHITE : (th === TH.red ? C.RED : C.BLACK), .3); c.lineWidth = 34; c.stroke();
+    c.beginPath(); c.arc(230, 260, 190, Math.PI, Math.PI * 1.72); c.strokeStyle = acc; c.lineWidth = 34; c.stroke();
+    for (let i = 0; i <= 8; i++) { const a = Math.PI + i * Math.PI / 8; ln(c, [[230 + Math.cos(a) * 140, 260 + Math.sin(a) * 140], [230 + Math.cos(a) * 155, 260 + Math.sin(a) * 155]], ink, 6); }
+    const a = Math.PI * 1.72; ln(c, [[230, 260], [230 + Math.cos(a) * 120, 260 + Math.sin(a) * 120]], C.PURPLE, 14); el(c, 230, 260, 22, 22, ink);
+  } },
+  shield: { w: 340, h: 400, draw(c, th) {
+    const f = th === TH.red ? C.WHITE : C.RED;
+    c.beginPath(); c.moveTo(170, 20); c.lineTo(310, 70); c.lineTo(300, 220); c.bezierCurveTo(290, 310, 220, 360, 170, 385); c.bezierCurveTo(120, 360, 50, 310, 40, 220); c.lineTo(30, 70); c.closePath(); c.fillStyle = f; c.fill();
+    ln(c, [[105, 205], [155, 255], [245, 150]], th === TH.red ? C.RED : C.WHITE, 26);
+  } },
+  service: { w: 440, h: 380, draw(c, th) {
+    const ink = th === TH.white ? C.BLACK : C.WHITE, bg = th === TH.red ? C.RED : th === TH.white ? C.WHITE : C.BLACK;
+    // gear
+    c.save(); c.translate(160, 200);
+    for (let i = 0; i < 8; i++) { c.rotate(Math.PI / 4); rr(c, -22, -140, 22, -100, 8, ink); }
+    c.restore(); el(c, 160, 200, 112, 112, ink); el(c, 160, 200, 46, 46, bg);
+    // wrench
+    c.save(); c.translate(300, 200); c.rotate(-Math.PI / 4);
+    rr(c, -20, -20, 200, 20, 18, th === TH.red ? C.BLACK : C.PURPLE); el(c, 0, 0, 52, 52, th === TH.red ? C.BLACK : C.PURPLE); rr(c, -60, -16, 0, 16, 4, bg);
+    c.restore();
+  } },
+  app: { w: 520, h: 400, draw(c, th) {
+    rr(c, 140, 10, 360, 390, 36, C.BLACK); rr(c, 156, 30, 344, 370, 24, C.NL);
+    rr(c, 176, 56, 324, 80, 8, C.RED); el(c, 250, 175, 64, 64, C.RED);
+    rr(c, 232, 150, 268, 196, 8, C.WHITE); c.beginPath(); c.arc(250, 150, 16, Math.PI, 0); c.strokeStyle = C.WHITE; c.lineWidth = 8; c.stroke();
+    [120, 90, 130].forEach((w, i) => rr(c, 176, 270 + i * 26, 176 + w, 282 + i * 26, 6, mix(C.BLACK, C.WHITE, .3)));
+    const ink = th === TH.white ? C.BLACK : C.WHITE;
+    [0, 1, 2].forEach(i => { c.beginPath(); c.arc(420, 120, 30 + i * 28, -Math.PI / 4, Math.PI / 4); c.strokeStyle = i === 0 ? C.PURPLE : ink; c.lineWidth = 10; c.lineCap = 'round'; c.stroke(); });
+  } },
+  gift: { w: 380, h: 380, draw(c, th) {
+    const box = th === TH.red ? C.WHITE : C.RED, rib = th === TH.red ? C.RED : C.WHITE;
+    rr(c, 40, 160, 340, 360, 18, box); rr(c, 20, 110, 360, 175, 16, box);
+    rr(c, 170, 110, 210, 360, 0, C.PURPLE); rr(c, 20, 130, 360, 152, 0, th === TH.white ? C.BLACK : rib);
+    c.beginPath(); c.ellipse(150, 85, 60, 34, -0.4, 0, Math.PI * 2); c.ellipse(230, 85, 60, 34, 0.4, 0, Math.PI * 2); c.strokeStyle = C.PURPLE; c.lineWidth = 18; c.stroke();
+  } },
+  calendar: { w: 380, h: 380, draw(c, th) {
+    const ink = th === TH.white ? C.BLACK : C.WHITE;
+    rr(c, 30, 60, 350, 360, 26, C.WHITE, th === TH.white ? C.BLACK : null, 6); rr(c, 30, 60, 350, 130, [26, 26, 0, 0], th === TH.red ? C.BLACK : C.RED);
+    rr(c, 100, 30, 122, 90, 10, ink); rr(c, 258, 30, 280, 90, 10, ink);
+    for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) rr(c, 66 + k * 72, 160 + r * 62, 106 + k * 72, 196 + r * 62, 8, r === 1 && k === 2 ? C.PURPLE : mix(C.NEUTRAL, C.WHITE, .35));
+  } },
+  price: { w: 440, h: 360, draw(c, th) {
+    const f = th === TH.red ? C.WHITE : C.RED, ink = th === TH.red ? C.RED : C.WHITE;
+    poly(c, [[60, 120], [180, 20], [400, 20], [400, 320], [180, 320]], f);
+    el(c, 150, 170, 26, 26, bgOf(th));
+    ctext(c, 300, 140, '%', '900 120px "Mona Sans"', ink); rr(c, 230, 230, 370, 252, 10, C.PURPLE);
+  } },
+  key: { w: 460, h: 300, draw(c, th) {
+    rr(c, 40, 40, 220, 260, 44, th === TH.red ? C.WHITE : C.BLACK, th === TH.black || th === TH.grad ? C.WHITE : null, 4);
+    el(c, 130, 110, 26, 26, C.RED); el(c, 130, 190, 26, 26, C.PURPLE);
+    const ink = th === TH.white ? C.BLACK : C.WHITE;
+    [0, 1, 2].forEach(i => { c.beginPath(); c.arc(260, 150, 40 + i * 34, -Math.PI / 4, Math.PI / 4); c.strokeStyle = i === 0 ? C.PURPLE : ink; c.lineWidth = 12; c.lineCap = 'round'; c.stroke(); });
+  } },
+  swap: { w: 600, h: 340, draw(c, th) {
+    const ink = th === TH.white ? C.BLACK : C.WHITE;
+    // fuel pump
+    rr(c, 30, 60, 170, 300, 18, mix(C.NEUTRAL, th === TH.white ? C.WHITE : C.BLACK, .7)); rr(c, 52, 86, 148, 150, 10, th === TH.white ? C.WHITE : C.BLACK);
+    ln(c, [[170, 120], [200, 120], [200, 230], [215, 245]], mix(C.NEUTRAL, th === TH.white ? C.WHITE : C.BLACK, .7), 10);
+    // arrow
+    poly(c, [[250, 160], [360, 160], [360, 120], [420, 190], [360, 260], [360, 220], [250, 220]], th === TH.red ? C.WHITE : C.RED);
+    // bolt badge
+    el(c, 510, 190, 78, 78, C.PURPLE); poly(c, [[520, 125], [478, 200], [508, 200], [496, 255], [544, 178], [514, 178]], C.WHITE);
+  } },
 };
 
 // ---------- motion helpers
@@ -177,32 +281,94 @@ function sceneWords(s) { return wordCount(s.label) + wordCount(s.title) + wordCo
 
 function layoutScene(s, idx) {
   const c = mctx(), th = TH[s.bg] || TH.black, maxW = SAFE.x1 - SAFE.x0, X = SAFE.x0;
+  const LAY = s.layout || 'default', AL = LAY === 'center' || LAY === 'quote' ? 'center' : 'left';
   const els = [], warn = [];
   let t = idx === 0 ? 0.15 : 0.45;
   let y = s.logoBig ? 520 : (s.step ? 430 : 440);
   const push = (o) => { els.push(o); return o; };
-  if (s.label) { const b = textBlock(c, s.label.toUpperCase(), F.label(), th.acc, maxW); push({ t0: t, y, h: b.height, draw: (cc, yy) => b.draw(cc, X, yy) }); y += b.height + 16; t += 0.05; }
+  const txt = (b, x = X, w = maxW, al = AL) => (cc, yy) => b.draw(cc, x, yy, al, w);
+  let artDone = false;
+  const placeArt = (maxH, after) => {
+    const a = ART[s.art], trackH = s.pattern && !s.logoBig ? 52 : 0;
+    const room = Math.min(maxH, SAFE.y1 - y - trackH), scale = Math.min(1, room / a.h, maxW / a.w);
+    if (scale < 0.45) { warn.push(`Không đủ chỗ cho hình "${ART_NAMES[s.art]}" — rút gọn chữ hoặc bỏ hình.`); return; }
+    const aw = a.w * scale, ah = a.h * scale, ride = s.art === 'scooter';
+    const ay = after ? y + Math.max(0, (room - ah) / 2) * (ride ? 0 : 1) : y;
+    const t0 = ride ? Math.max(0.9, t - 0.3) : t, ax = s.align === 'right' ? SAFE.x1 - aw : X + (maxW - aw) / 2;
+    push({ t0, y: ay, h: ah, d: ride ? 1.0 : 0.55, dy: ride ? 0 : 60, sfx: ride ? 'whoosh' : 'pop', ride, draw: (cc, yy, k) => {
+      cc.save(); const rx = ride ? -aw - X + (ax + aw + X) * k : ax; cc.translate(ride ? rx : ax, yy); cc.scale(scale, scale); a.draw(cc, th); cc.restore();
+    } });
+    if (trackH) addTrack(els, ay + ah + 6, 46, t0, 1.0, th.motif, X, SAFE.x1);
+    y = ay + ah + trackH + (after ? 0 : 44); t = t0 + (ride ? 1.0 : 0.5); artDone = true;
+  };
+  if (s.label) { const b = textBlock(c, s.label.toUpperCase(), F.label(), th.acc, maxW); push({ t0: t, y, h: b.height, draw: txt(b) }); y += b.height + 16; t += 0.05; }
+  if (LAY === 'artTop' && s.art && s.art !== 'none' && ART[s.art]) placeArt(460, false);
+  if (LAY === 'quote') {
+    const qy = y; push({ t0: t, y: qy, h: 150, draw: (cc, yy) => { cc.font = '900 260px "Mona Sans"'; cc.fillStyle = th.acc === C.WHITE ? (s.bg === 'red' ? C.BLACK : C.RED) : th.acc; cc.textBaseline = 'top'; cc.textAlign = 'center'; cc.fillText('“', W / 2, yy - 40); cc.textAlign = 'left'; } });
+    y += 150; t += 0.2;
+  }
   if (s.title) {
     let size = s.titleSize, b;
-    if (!size) { for (const sz of [104, 96, 88, 80, 72, 64]) { b = textBlock(c, s.title, F.title(sz), th.fg, maxW, 1.15); size = sz; if (b.lines <= 2 || (sz <= 80 && b.lines <= 3)) break; } }
-    b = textBlock(c, s.title, F.title(size), th.fg, maxW, 1.15, s.hi, th.hi);
-    push({ t0: t, y, h: b.height, draw: (cc, yy) => b.draw(cc, X, yy) }); y += b.height + 40; t += 0.55;
+    if (LAY === 'bignum') {
+      size = 0; for (const sz of [300, 260, 220, 190, 160]) { b = textBlock(c, s.title, F.title(sz), th.big, maxW, 1.0); if (b.lines === 1) { size = sz; break; } }
+      if (!size) for (const sz of [190, 160, 130, 110]) { b = textBlock(c, s.title, F.title(sz), th.big, maxW, 1.0); size = sz; if (b.lines <= 2) break; }
+      b = textBlock(c, s.title, F.title(size), th.big, maxW, 1.0);
+      push({ t0: t, y, h: b.height, d: 0.6, dy: 60, sfx: 'pop', draw: txt(b) }); y += b.height + 10;
+      const by = y; push({ t0: t + 0.3, y: by, h: 10, dy: 0, draw: (cc, yy, k) => rr(cc, X, yy, X + 160 * k, yy + 10, 5, s.bg === 'red' ? C.BLACK : C.PURPLE) });
+      y += 46; t += 0.65;
+    } else {
+      const wt = LAY === 'quote' ? 700 : 900, f = sz => `${wt} ${sz}px "Mona Sans"`;
+      if (!size) { for (const sz of (LAY === 'quote' ? [80, 72, 64, 58] : LAY === 'center' ? [120, 108, 96, 88, 80, 72] : [104, 96, 88, 80, 72, 64])) { b = textBlock(c, s.title, f(sz), th.fg, maxW, 1.15); size = sz; if (b.lines <= (LAY === 'quote' ? 4 : 2) || (sz <= 80 && b.lines <= 3)) break; } }
+      b = textBlock(c, s.title, f(size), th.fg, maxW, 1.15, s.hi, th.hi);
+      push({ t0: t, y, h: b.height, draw: txt(b) }); y += b.height + 40; t += 0.55;
+    }
   }
-  if (s.body) { const b = textBlock(c, s.body, F.body(), th.fg, maxW, 1.26, s.hi, th.hi); push({ t0: t, y, h: b.height, draw: (cc, yy) => b.draw(cc, X, yy), sfx: 'pop' }); y += b.height + 34; t += 0.5; }
+  if (s.body) { const b = textBlock(c, s.body, F.body(), th.fg, maxW, 1.26, s.hi, th.hi); push({ t0: t, y, h: b.height, draw: txt(b), sfx: 'pop' }); y += b.height + 34; t += 0.5; }
   const items = (s.items || []).filter(it => it.t);
-  if (items.length) {
+  if (items.length && LAY === 'compare') {
+    const gap = 24, cw = (maxW - gap) / 2, [hd, ...rows] = items;
+    const hA = textBlock(c, hd.t, '800 40px "Mona Sans"', C.WHITE, cw - 40), hB = textBlock(c, hd.n || '', '800 40px "Mona Sans"', C.WHITE, cw - 40);
+    const hh = Math.max(hA.height, hB.height) + 36, hy = y;
+    const colA = s.bg === 'white' ? C.NEUTRAL : 'rgba(255,255,255,0.18)', colB = s.bg === 'red' ? C.BLACK : C.RED;
+    push({ t0: t, y: hy, h: hh, sfx: 'pop', draw: (cc, yy) => { rr(cc, X, yy, X + cw, yy + hh, 14, colA); rr(cc, X + cw + gap, yy, SAFE.x1, yy + hh, 14, colB); hA.draw(cc, X + 20, yy + 18, 'center', cw - 40); hB.draw(cc, X + cw + gap + 20, yy + 18, 'center', cw - 40); } });
+    y += hh + 18; t += 0.4;
+    rows.slice(0, 5).forEach((r, i) => {
+      const a = textBlock(c, r.t, '600 42px "Mona Sans"', th.sub, cw - 30), b = textBlock(c, r.n || '', '700 42px "Mona Sans"', th.fg, cw - 30);
+      const rh = Math.max(a.height, b.height) + 28, ry = y, t0 = t + i * 0.4;
+      push({ t0, y: ry, h: rh, sfx: 'tick', draw: (cc, yy) => { a.draw(cc, X + 15, yy + 14); b.draw(cc, X + cw + gap + 15, yy + 14); ln(cc, [[X, yy + rh], [SAFE.x1, yy + rh]], th.off, 2); } });
+      y += rh;
+    });
+    y += 34; t += rows.length * 0.4;
+  } else if (items.length && LAY === 'cards') {
+    const gap = 22, cw = (maxW - gap) / 2;
+    for (let i = 0; i < Math.min(items.length, 4); i += 2) {
+      const row = items.slice(i, i + 2).map((it, j) => {
+        const tb = textBlock(c, it.t, '700 42px "Mona Sans"', th.fg, cw - 48), nb = it.n ? textBlock(c, it.n, '400 34px "Josefin Sans"', th.sub, cw - 48) : null;
+        return { tb, nb, h: 96 + tb.height + (nb ? nb.height + 8 : 0) + 30, n: i + j + 1 };
+      });
+      const rh = Math.max(...row.map(r => r.h)), ry = y;
+      row.forEach((r, j) => {
+        const cx = X + j * (cw + gap), t0 = t + (i + j) * 0.35;
+        push({ t0, y: ry, h: rh, sfx: 'tick', draw: (cc, yy) => {
+          rr(cc, cx, yy, cx + cw, yy + rh, 22, th.card);
+          el(cc, cx + 52, yy + 54, 30, 30, th.num === C.WHITE && s.bg !== 'red' ? C.RED : th.num); ctext(cc, cx + 52, yy + 55, String(r.n), '900 32px "Mona Sans"', th.num === C.WHITE && s.bg !== 'red' ? C.WHITE : (s.bg === 'red' ? C.RED : C.WHITE));
+          r.tb.draw(cc, cx + 24, yy + 100); if (r.nb) r.nb.draw(cc, cx + 24, yy + 100 + r.tb.height + 8);
+        } });
+      });
+      y += rh + gap;
+    }
+    y += 16; t += Math.min(items.length, 4) * 0.35 + 0.1;
+  } else if (items.length) {
     const style = s.itemStyle || 'num';
     if (style === 'timeline') {
-      const ty = y, step = 115;
+      const ty = y, step = 115, t0 = t, n = items.length;
       items.forEach((it, i) => {
         const b = textBlock(c, it.t, F.item(), th.fg, maxW - 70);
-        const t0 = t + i * 0.5;
-        push({ t0, y: ty - 6 + i * step, h: b.height, dy: 0, draw: (cc, yy) => b.draw(cc, X + 70, yy), sfx: 'tick' });
+        push({ t0: t + i * 0.5, y: ty - 6 + i * step, h: b.height, dy: 0, draw: txt(b, X + 70, maxW - 70, 'left'), sfx: 'tick' });
       });
-      const t0 = t, n = items.length;
-      els.push({ t0: t0, y: ty, h: 0, dy: 0, d: 0.01, fx: true, draw: (cc, yy, k, lt) => {
-        const kk = ease((lt - t0) / (0.5 * n)); ln(cc, [[X + 20, ty + 20], [X + 20, ty + 20 + (n - 1) * step * kk]], th.off, 4);
-        items.forEach((_, i) => { const ti = t0 + i * 0.5; if (lt >= ti) { const r = 14 * ease((lt - ti) / 0.25); el(cc, X + 20, ty + 20 + i * step, r, r, i === n - 1 ? C.RED : th.fg); } });
+      els.push({ t0, y: ty, h: 0, dy: 0, d: 0.01, fx: true, draw: (cc, yy, k, lt) => {
+        const kk = ease((lt - t0) / (0.5 * n)); ln(cc, [[X + 20, yy + 20], [X + 20, yy + 20 + (n - 1) * step * kk]], th.off, 4);
+        items.forEach((_, i) => { const ti = t0 + i * 0.5; if (lt >= ti) { const r = 14 * ease((lt - ti) / 0.25); el(cc, X + 20, yy + 20 + i * step, r, r, i === n - 1 ? C.RED : th.fg); } });
       } });
       y = ty + (n - 1) * step + 70; t += n * 0.5;
     } else {
@@ -225,37 +391,24 @@ function layoutScene(s, idx) {
   }
   if (s.tip) {
     const b = textBlock(c, s.tip, F.tip(), th.tipFg, maxW - 60, 1.26, s.hi, { color: th.tipHi });
-    const ty = y + 6, h = b.height + 44, t0 = t;
-    push({ t0, y: ty, h, dy: 0, sfx: 'pop', draw: (cc, yy, k) => { rr(cc, X, yy, X + Math.min(maxW, 60 + b.width), yy + h, 16, th.tipBg); b.draw(cc, X + 30, yy + 24); } });
+    const ty = y + 6, h = b.height + 44, t0 = t, bw = Math.min(maxW, 60 + b.width), bx = AL === 'center' ? X + (maxW - bw) / 2 : X;
+    push({ t0, y: ty, h, dy: 0, sfx: 'pop', draw: (cc, yy) => { rr(cc, bx, yy, bx + bw, yy + h, 16, th.tipBg); b.draw(cc, bx + 30, yy + 24); } });
     y = ty + h + 34; t += 0.5;
   }
-  if (s.sub) { const b = textBlock(c, s.sub, F.sub(), th.sub, maxW, 1.3); push({ t0: t, y, h: b.height, draw: (cc, yy) => b.draw(cc, X, yy) }); y += b.height + 30; t += 0.4; }
-  // big logo (outro)
+  if (s.sub) { const b = textBlock(c, (LAY === 'quote' ? '— ' : '') + s.sub, F.sub(), th.sub, maxW, 1.3); push({ t0: t, y, h: b.height, draw: txt(b) }); y += b.height + 30; t += 0.4; }
   if (s.logoBig) {
     const lw = 540, img = A.logo, lh = lw * img.height / img.width, ly = y + 60, t0 = t + 0.1;
     push({ t0, y: ly, h: lh, d: 0.6, sfx: 'outro', draw: (cc, yy) => drawLogo(cc, (W - lw) / 2, yy, lw, th.logo) });
     y = ly + lh; t = t0 + 0.6;
     if (s.pattern) { addTrack(els, ly + lh + 70, 44, t0 + 0.3, 1.0, C.WHITE, 0, W); y += 120; }
   }
-  // illustration
-  let artBox = null;
-  if (s.art && s.art !== 'none' && ART[s.art]) {
-    const a = ART[s.art], trackH = s.pattern && !s.logoBig ? 52 : 0;
-    const room = SAFE.y1 - y - trackH;
-    const scale = Math.min(1, room / a.h, maxW / a.w);
-    if (scale < 0.55) warn.push(`Không đủ chỗ cho hình "${ART_NAMES[s.art]}" — rút gọn chữ hoặc bỏ hình.`);
-    else {
-      const aw = a.w * scale, ah = a.h * scale, ay = y + Math.max(0, (room - ah) / 2) * (s.art === 'scooter' ? 0 : 1);
-      const ride = s.art === 'scooter', t0 = ride ? Math.max(0.9, t - 0.3) : t, ax = s.align === 'right' ? SAFE.x1 - aw : X + (maxW - aw) / 2;
-      artBox = { y: ay, h: ah };
-      push({ t0, y: ay, h: ah, d: ride ? 1.0 : 0.55, dy: ride ? 0 : 60, sfx: ride ? 'whoosh' : 'pop', draw: (cc, yy, k) => {
-        cc.save(); const rx = ride ? -aw - X + (ax + aw + X) * k : ax; cc.translate(ride ? rx : ax, yy); cc.scale(scale, scale);
-        if (ride) cc.globalAlpha = 1; a.draw(cc, th); cc.restore();
-      }, ride });
-      if (trackH) addTrack(els, ay + ah + 6, 46, t0, 1.0, th.motif, X, SAFE.x1);
-      y = ay + ah + trackH; t = t0 + (ride ? 1.0 : 0.5);
-    }
-  } else if (s.pattern && !s.logoBig) { addTrack(els, y + 20, 56, t, 1.1, th.motif, X, SAFE.x1); y += 90; t += 0.6; }
+  if (!artDone && s.art && s.art !== 'none' && ART[s.art]) placeArt(9999, true);
+  else if (!artDone && s.pattern && !s.logoBig) { addTrack(els, y + 20, 56, t, 1.1, th.motif, X, SAFE.x1); y += 90; t += 0.6; }
+  // vertical centering for statement layouts
+  if ((LAY === 'center' || LAY === 'bignum' || LAY === 'quote') && !artDone && !s.logoBig && els.length) {
+    const top = Math.min(...els.map(o => o.y)), mid = (470 + SAFE.y1) / 2, off = Math.max(0, mid - (top + y) / 2);
+    els.forEach(o => o.y += off); y += off;
+  }
   const lastAppear = t;
   if (y > SAFE.y1 + 2) warn.push(`Nội dung tràn khỏi vùng an toàn ${Math.round(y - SAFE.y1)}px — rút gọn chữ.`);
   const words = sceneWords(s);
@@ -267,8 +420,8 @@ function addTrack(els, y, h, t0, dur, color, x0, x1) {
     const kk = ease((lt - t0) / dur); if (kk <= 0) return;
     const img = tinted(A.pattern, color), tw = img.width * h / img.height, w = (x1 - x0) * kk;
     const off = ((lt - t0) * 40) % tw;
-    cc.save(); cc.beginPath(); cc.rect(x0, y, w, h); cc.clip();
-    for (let x = x0 - off; x < x0 + w; x += tw) cc.drawImage(img, x, y, tw, h);
+    cc.save(); cc.beginPath(); cc.rect(x0, yy, w, h); cc.clip();
+    for (let x = x0 - off; x < x0 + w; x += tw) cc.drawImage(img, x, yy, tw, h);
     cc.restore();
   } });
 }
@@ -359,5 +512,5 @@ async function renderAudio(tl, { music = true, sfx = true, sr = 48000 } = {}) {
   return ac.startRendering();
 }
 
-window.MoveEngine = { fontsOK: () => !!A.fontsOK, W, H, SAFE, C, TH, BG_NAMES, ART_NAMES, loadAssets, buildTimeline, renderAt, renderAudio, layoutScene, sceneWords };
+window.MoveEngine = { LAYOUT_NAMES, fontsOK: () => !!A.fontsOK, W, H, SAFE, C, TH, BG_NAMES, ART_NAMES, loadAssets, buildTimeline, renderAt, renderAudio, layoutScene, sceneWords };
 })();
