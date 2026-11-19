@@ -144,7 +144,8 @@ function smartSplit(raw, target = 40) {
   });
   // drop near-empty scenes, merge text-only scenes when too many
   let out = scenes.filter(s => s.title || s.items.length);
-  while (out.length > (target >= 38 ? 11 : 9)) { const pick = f => out.findIndex((s, k) => k > 0 && k < out.length - 1 && !s.items.length && !s.step && f(s)); let i = pick(s => !s.tip && s.bg !== 'red'); if (i < 0) i = pick(s => s.bg !== 'red'); if (i < 0) break; out.splice(i, 1); }
+  const maxScenes = Math.max(8, Math.min(20, Math.round(target / 4.2)));
+  while (out.length > maxScenes) { const pick = f => out.findIndex((s, k) => k > 0 && k < out.length - 1 && !s.items.length && !s.step && f(s)); let i = pick(s => !s.tip && s.bg !== 'red'); if (i < 0) i = pick(s => s.bg !== 'red'); if (i < 0) break; out.splice(i, 1); }
   // highlight words in tips: uppercase words or key phrases
   out.forEach(s => {
     if (!s.layout || s.layout === 'default') {
@@ -165,7 +166,7 @@ function smartSplit(raw, target = 40) {
   // durations from words, then scale to target
   const words = s => [s.label, s.title, s.body, s.sub, s.tip, ...s.items.map(i => i.t + ' ' + i.n)].join(' ').split(/\s+/).filter(Boolean).length;
   out.forEach(s => s.dur = Math.max(3, Math.min(6.5, 1.6 + words(s) / 7 + s.items.length * 0.35)));
-  const tot = out.reduce((a, s) => a + s.dur, 0), k = Math.min(1.25, Math.max(0.6, target / tot));
+  const tot = out.reduce((a, s) => a + s.dur, 0), k = Math.min(1.6, Math.max(0.6, target / tot));
   out.forEach(s => s.dur = +Math.max(2.8, Math.min(7, s.dur * k)).toFixed(1));
   return out;
 }

@@ -23,7 +23,7 @@ Thư mục Drive: `Videos/` (file MP4/WebM) và `Projects/` (JSON dự án, mở
 Mở web → nhập **mã truy cập team** ở bước 1 → Kết nối. Không có mã vẫn dùng đầy đủ, chỉ tải clip về máy.
 
 ## Ghi chú
-- Export dùng WebCodecs: Chrome / Edge mới. Giới hạn upload Drive ~35 MB (clip 45s 1080p chất lượng Tiêu chuẩn vừa đủ).
+- Export dùng WebCodecs: Chrome / Edge mới. Clip dài tối đa 1p30s. Khi tự lưu Drive, bitrate tự hạ để file ≤ ~30 MB (giới hạn Apps Script).
 - Âm thanh (SFX + nhạc nền) tự tổng hợp trong trình duyệt — không dùng âm thanh bên ngoài.
 - Font Mona Sans / Josefin Sans tải từ Google Fonts. Logo, motif, pattern trích từ Brand Guideline 2026.
 - Sau khi sửa `apps-script/Code.gs`: Deploy → Manage deployments → Edit → New version (giữ nguyên URL).

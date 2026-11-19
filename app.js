@@ -148,7 +148,7 @@ $('#aiParse').onclick = async () => {
 function msg(sel, t, err) { const m = $(sel); m.textContent = t; m.className = (m.className.replace(/\berr\b/, '') + (err ? ' err' : '')).trim(); }
 
 function aiPrompt(raw, target) {
-  return `Bạn là biên tập viên motion graphic cho thương hiệu xe điện MOVE (Việt Nam). Hãy KIỂM TRA content dưới đây và chuyển nó thành kịch bản clip animation dọc 9:16, chữ là chính, dễ đọc, gọn, tập trung ý chính, tổng thời lượng khoảng ${target}s (bắt buộc trong 15–45s, mỗi cảnh 3–6s).
+  return `Bạn là biên tập viên motion graphic cho thương hiệu xe điện MOVE (Việt Nam). Hãy KIỂM TRA content dưới đây và chuyển nó thành kịch bản clip animation dọc 9:16, chữ là chính, dễ đọc, gọn, tập trung ý chính, tổng thời lượng khoảng ${target}s (bắt buộc trong 15–90s, mỗi cảnh 3–6s).
 
 Chỉ trả về JSON (không markdown) đúng dạng:
 {"scenes":[Scene,...],"notes":[{"level":"error"|"warn"|"info","text":"..."}]}
@@ -180,7 +180,7 @@ Quy tắc brand MOVE 2026:
 - Pattern chỉ ở cảnh mở và cảnh kết. Cảnh cảnh báo dùng bg "red" + sfx "alert".
 - Cảnh có ≥ 3 items hoặc có cả tip và sub thì art "none" (trừ layout cards/compare luôn art "none"). Mỗi cảnh một ý. Đa dạng bố cục: dùng bignum cho con số nổi bật, center cho câu chốt, cards cho 3–4 giấy tờ/lợi ích, compare khi so sánh 2 thứ.
 - Không thêm thông tin không có trong content, giữ đúng số liệu, giọng thân thiện như content gốc.
-- 6–11 cảnh.
+- Số cảnh theo thời lượng: khoảng 1 cảnh mỗi 4–5s (tối đa 20 cảnh).
 
 "notes" là kết quả KIỂM TRA content gốc: lỗi chính tả/ngữ pháp, chỗ mâu thuẫn hoặc khó hiểu, thông tin cần xác minh (pháp lý, phí, thời gian), nội dung quan trọng đã bị lược khi rút gọn. Viết tiếng Việt, ngắn.
 
@@ -235,8 +235,8 @@ function checks() {
   if (!state.scenes.length) return [{ level: 'error', text: 'Chưa có cảnh nào.' }];
   const T = tl.total;
   if (T < 14.95) out.push({ level: 'error', text: `Tổng thời lượng ${T.toFixed(1)}s < 15s.` });
-  else if (T > 45.05) out.push({ level: 'error', text: `Tổng thời lượng ${T.toFixed(1)}s > 45s — bớt cảnh hoặc giảm thời lượng.` });
-  else out.push({ level: 'ok', text: `Thời lượng ${T.toFixed(1)}s (15–45s).` });
+  else if (T > 90.05) out.push({ level: 'error', text: `Tổng thời lượng ${T.toFixed(1)}s > 1p30s — bớt cảnh hoặc giảm thời lượng.` });
+  else out.push({ level: 'ok', text: `Thời lượng ${T.toFixed(1)}s (15s–1p30s).` });
   tl.scenes.forEach((e, i) => {
     e.L.warn.forEach(w => { const px = +((w.match(/(\d+)px/) || [])[1] || 0); out.push({ level: /tràn/.test(w) && px > 40 ? 'error' : 'warn', text: `Cảnh ${i + 1}: ${w}`, i }); });
     const need = e.L.words / 6; if (need > e.dur * 2) out.push({ level: 'warn', text: `Cảnh ${i + 1}: dày chữ (${e.L.words} chữ, cần ~${need.toFixed(1)}s để đọc hết, đang ${e.dur.toFixed(1)}s) — rút gọn hoặc tăng thời lượng.`, i });
@@ -247,7 +247,7 @@ function checks() {
   });
   const r = ratio(); if (r.red < 0.25 || r.red > 0.6) out.push({ level: 'info', text: `Nền đỏ chiếm ${Math.round(r.red * 100)}% thời lượng (guideline ~40%).` });
   if (!state.scenes.some(s => s.logoBig)) out.push({ level: 'info', text: 'Chưa có cảnh kết với logo lớn / CTA.' });
-  if (state.scenes.length > 12) out.push({ level: 'warn', text: 'Hơn 12 cảnh — clip dễ bị dồn.' });
+  if (state.scenes.length > 24) out.push({ level: 'warn', text: 'Hơn 24 cảnh — clip dễ bị dồn.' });
   return out;
 }
 function ratio() { const r = { red: 0, black: 0, white: 0, grad: 0 }; tl.scenes.forEach(e => r[e.s.bg] += e.dur / tl.total); return r; }
@@ -407,7 +407,10 @@ $('#exportBtn').onclick = async () => {
   if (err.length) { $('#m4').innerHTML = `<span style="color:var(--red)">Còn ${err.length} lỗi ở bước Kiểm tra: ${esc(err[0].text)}</span>`; return; }
   await detectFormats(); stop();
   const f = FMT.find(x => x.id === val('fmt')); if (!f) return;
-  const res = +val('res'), w = res === 1080 ? 1080 : 720, h = res === 1080 ? 1920 : 1280, fps = +val('fps'), br = +val('q') * 1e6 * (res === 1080 ? 1 : 0.55);
+  const res = +val('res'), w = res === 1080 ? 1080 : 720, h = res === 1080 ? 1920 : 1280, fps = +val('fps');
+  let br = +val('q') * 1e6 * (res === 1080 ? 1 : 0.55);
+  // keep the file under the Drive backend limit when auto-saving (long clips up to 1p30s)
+  if (backend.auth && $('#autoDrive').checked) { const cap = (CFG.MAX_UPLOAD_MB || 30) * 0.85 * 8e6 / Math.max(1, tl.total); if (br > cap) br = Math.max(1.5e6, cap); }
   const btn = $('#exportBtn'); btn.disabled = true; lastBlob = null; setDriveUI(); $('#m4d').textContent = ''; $('#outVid').style.display = 'none';
   const prog = p => { $('#prog').style.width = Math.round(p * 100) + '%'; };
   try {
